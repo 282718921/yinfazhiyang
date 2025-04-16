@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', Arial, sans-serif;
+    }
+
+    #app {
+      height: 100%;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #304156;
+      color: white;
+    }
+
+    .sidebar .logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #263445;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 60px;
+      line-height: 60px;
+      padding-left: 20px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .content {
+      padding: 20px;
+      background-color: #f0f2f5;
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* 表格样式优化 */
+    .el-table {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    .el-table th {
+      background-color: #f5f7fa !important;
+      color: #606266;
+      font-weight: bold;
+    }
+
+    .el-table--striped .el-table__body tr.el-table__row--striped td {
+      background-color: #fafafa;
+    }
+
+    /* 搜索表单样式 */
+    .search-form .el-card__header {
+      padding: 12px 20px;
+      background-color: #f5f7fa;
+    }
+
+    /* 按钮样式优化 */
+    .el-button--primary {
+      background-color: #409EFF;
+      border-color: #409EFF;
+    }
+
+    .el-button--primary:hover {
+      background-color: #66b1ff;
+      border-color: #66b1ff;
+    }
+
+    /* 分页样式 */
+    .pagination-container {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="logo">管理系统</div>
+      <el-menu default-active="2" @select="handleMenu" background-color="#304156" text-color="#bfcbd9"
+        active-text-color="#409EFF">
+        <el-menu-item index="1">
+          <i class="el-icon-s-home"></i>
+          <span slot="title">首页</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <i class="el-icon-s-grid"></i>
+          <span slot="title">服务管理</span>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <i class="el-icon-user"></i>
+          <span slot="title">服务人员管理</span>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <i class="el-icon-office-building"></i>
+          <span slot="title">养老机构管理</span>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <i class="el-icon-s-shop"></i>
+          <span slot="title">服务商管理</span>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <i class="el-icon-s-order"></i>
+          <span slot="title">订单管理</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <!-- 主区域 -->
+    <div class="main">
+      <div class="header">后台管理系统</div>
+      <div class="content">
+
+        <!-- 服务管理 -->
+        <div v-if="activePage === 'service'">
+          <!-- 搜索区域 -->
+          <el-card class="search-form" style="margin-bottom: 20px;">
+            <div slot="header" style="font-weight: bold;"><i class="el-icon-search" style="margin-right: 5px;"></i>搜索条件
+            </div>
+            <el-form :inline="true" :model="searchForm" size="small">
+              <el-form-item label="服务名称">
+                <el-input v-model="searchForm.name" placeholder="请输入名称" clearable></el-input>
+              </el-form-item>
+              <el-form-item label="服务类型">
+                <el-select v-model="searchForm.type" placeholder="请选择服务类型" clearable style="width: 180px;">
+                  <el-option v-for="item in typeOptions" :key="item.dictValue" :label="item.dictLabel"
+                    :value="item.dictValue" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="服务状态">
+                <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+                  <el-option label="启用" value="1"></el-option>
+                  <el-option label="禁用" value="0"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+                <el-button icon="el-icon-refresh" @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+
+          <!-- 操作按钮 -->
+          <div style="margin-bottom: 15px;">
+            <el-button type="primary" icon="el-icon-plus" size="small" @click="openDialog('add')">新增服务</el-button>
+          </div>
+
+          <!-- 表格数据 -->
+          <el-table :data="filteredList" style="width: 100%;" border stripe highlight-current-row
+            :header-cell-style="{backgroundColor: '#f5f7fa', color: '#606266', fontWeight: 'bold'}"
+            v-loading="tableLoading">
+            <template slot="empty">
+              <div style="padding: 30px 0; text-align: center;">
+                <i class="el-icon-search" style="font-size: 30px; color: #909399;"></i>
+                <p style="margin-top: 10px; color: #909399;">暂无数据</p>
+              </div>
+            </template>
+            <el-table-column prop="name" label="服务名称" min-width="120" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="type" label="服务类型" min-width="120">
+              <template v-slot="{row}">
+                <el-tag size="small" effect="plain" type="primary">
+                  {{ getTypeLabel(row.type) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="desc" label="服务描述" min-width="180" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="price" label="价格(元/小时)" width="120" align="center">
+              <template v-slot="{row}">
+                <span style="color: #ff6b6b; font-weight: bold;">¥{{ row.price }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="duration" label="预估时长(h)" width="120" align="center"></el-table-column>
+            <el-table-column prop="soldCount" label="已售数量" width="100" align="center">
+              <template v-slot="{row}">
+                <span style="font-weight: bold;">{{ row.soldCount || 0 }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="服务标签" min-width="120">
+              <template v-slot="{row}">
+                <el-tag v-for="(tag, index) in row.tags" :key="index" size="mini" effect="plain"
+                  style="margin-right: 4px; margin-bottom: 4px;">
+                  {{ tag }}
+                </el-tag>
+                <span v-if="!row.tags || row.tags.length === 0" style="color: #909399; font-size: 12px;">暂无标签</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="100" align="center">
+              <template v-slot="{row}">
+                <el-switch v-model="row.status" active-value="1" inactive-value="0"
+                  @change="(val) => handleStatusChange(row, val)" active-color="#13ce66" inactive-color="#ff4949">
+                </el-switch>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="240" align="center" fixed="right">
+              <template v-slot="{row}">
+                <el-button size="mini" type="primary" icon="el-icon-edit" circle @click="openDialog('edit', row)"
+                  title="编辑"></el-button>
+                <el-button size="mini" type="success" icon="el-icon-user" circle @click="openBindStaffDialog(row)"
+                  title="绑定服务人员"></el-button>
+                <el-button size="mini" type="danger" icon="el-icon-delete" circle @click="handleDelete(row)"
+                  title="删除"></el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="pagination-container"
+            style="margin-top: 20px; padding: 10px; background: #fff; border-radius: 4px;">
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+              :current-page="currentPage" :page-sizes="[5, 10, 20]" :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper" :total="filteredList.length" background
+              style="text-align: right;">
+            </el-pagination>
+          </div>
+
+          <!-- 弹窗表单 -->
+          <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="700px">
+            <el-form :model="form" :rules="formRules" ref="serviceForm" label-width="120px" size="small">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="服务名称" prop="name">
+                    <el-input v-model="form.name" placeholder="请输入服务名称"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="服务类型" prop="type">
+                    <el-select v-model="form.type" placeholder="请选择服务类型" style="width: 100%;">
+                      <el-option v-for="item in typeOptions" :key="item.dictValue" :label="item.dictLabel"
+                        :value="item.dictValue" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="服务描述" prop="desc">
+                    <el-input v-model="form.desc" type="textarea" rows="3" placeholder="请输入简要描述"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="价格(元/小时)" prop="price">
+                    <el-input-number v-model="form.price" :min="0" :precision="2" :step="10"
+                      style="width: 100%"></el-input-number>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="预估时长(h)" prop="duration">
+                    <el-input-number v-model="form.duration" :min="0" :precision="1" :step="0.5"
+                      style="width: 100%"></el-input-number>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="服务标签">
+                    <el-tag :key="tag" v-for="tag in form.tags" closable :disable-transitions="false"
+                      @close="handleRemoveTag(tag)" style="margin-right: 8px; margin-bottom: 8px;">
+                      {{tag}}
+                    </el-tag>
+                    <el-input class="input-new-tag" v-if="inputTagVisible" v-model="inputTagValue" ref="saveTagInput"
+                      size="small" @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm"
+                      style="width: 90px; margin-right: 8px; vertical-align: bottom;">
+                    </el-input>
+                    <el-button v-else class="button-new-tag" size="small" @click="showInputTag">+ 添加标签</el-button>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="服务宣传图">
+                    <el-upload action="#" list-type="picture-card" :auto-upload="false" :file-list="form.imageList">
+                      <i class="el-icon-plus"></i>
+                    </el-upload>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="服务详情">
+                    <el-input type="textarea" v-model="form.details" rows="4" placeholder="请输入详细服务内容描述"></el-input>
+                    <div class="tip-text"><i class="el-icon-info"></i> 支持富文本图文编辑，可输入格式化文本和图片内容</div>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="已售数量" prop="soldCount">
+                    <el-input-number v-model="form.soldCount" :min="0" style="width: 100%"></el-input-number>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="状态">
+                    <el-radio-group v-model="form.status">
+                      <el-radio label="1">启用</el-radio>
+                      <el-radio label="0">禁用</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="备注">
+                    <el-input type="textarea" v-model="form.remark" rows="2" placeholder="请输入备注信息"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div slot="footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="submitForm">保存</el-button>
+            </div>
+          </el-dialog>
+
+          <!-- 绑定服务人员弹窗 -->
+          <el-dialog title="绑定服务人员" :visible.sync="bindStaffDialogVisible" width="700px">
+            <div v-if="currentService" style="margin-bottom: 15px;">
+              <div style="font-weight: bold; margin-bottom: 10px;">当前服务：{{ currentService.name }}</div>
+              <el-alert title="请选择服务类型匹配的服务人员进行绑定" type="info" :closable="false">
+              </el-alert>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <el-input placeholder="搜索服务人员" v-model="staffSearchKeyword" prefix-icon="el-icon-search" clearable
+                style="width: 250px;">
+              </el-input>
+            </div>
+
+            <el-table :data="filteredStaffList" style="width: 100%;" border v-loading="staffTableLoading">
+              <el-table-column type="selection" width="55"></el-table-column>
+              <el-table-column prop="name" label="姓名" width="100"></el-table-column>
+              <el-table-column prop="age" label="年龄" width="70" align="center"></el-table-column>
+              <el-table-column label="服务类型" min-width="120">
+                <template v-slot="{row}">
+                  <el-tag v-for="(type, index) in row.serviceTypes" :key="index" size="mini" effect="plain"
+                    style="margin-right: 4px; margin-bottom: 4px;">
+                    {{ getTypeLabel(type) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="workYears" label="从业年限" width="90" align="center"></el-table-column>
+              <el-table-column label="状态" width="90" align="center">
+                <template v-slot="{row}">
+                  <el-tag :type="row.status === '1' ? 'success' : 'info'" size="mini">
+                    {{ row.status === '1' ? '可分配' : '不可分配' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" align="center">
+                <template v-slot="{row}">
+                  <el-button size="mini" :type="isStaffBound(row.id) ? 'danger' : 'success'"
+                    @click="toggleBindStaff(row)">
+                    {{ isStaffBound(row.id) ? '解绑' : '绑定' }}
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div style="margin-top: 20px;">
+              <el-divider content-position="left">已绑定服务人员</el-divider>
+              <div v-if="boundStaffList.length === 0" style="color: #909399; text-align: center; padding: 20px;">
+                <i class="el-icon-info" style="font-size: 20px;"></i>
+                <p>暂无绑定的服务人员</p>
+              </div>
+              <el-tag v-for="staff in boundStaffList" :key="staff.id" closable @close="unbindStaff(staff)"
+                style="margin-right: 10px; margin-bottom: 10px;">
+                {{ staff.name }}
+              </el-tag>
+            </div>
+
+            <div slot="footer">
+              <el-button @click="bindStaffDialogVisible = false">关闭</el-button>
+              <el-button type="primary" @click="saveBindStaff">保存</el-button>
+            </div>
+          </el-dialog>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          activePage: 'service',
+
+          currentPage: 1,
+          pageSize: 10,
+          searchForm: {
+            name: '',
+            type: '',
+            status: ''
+          },
+          tableLoading: false,
+          dialogVisible: false,
+          dialogTitle: '',
+          inputTagVisible: false,
+          inputTagValue: '',
+          // 绑定服务人员相关数据
+          bindStaffDialogVisible: false,
+          currentService: null,
+          staffSearchKeyword: '',
+          staffTableLoading: false,
+          tempBoundStaffIds: [],
+          form: {
+            id: null,
+            name: '',
+            type: '',
+            desc: '',
+            price: 0,
+            duration: 0,
+            status: '1',
+            tags: [],
+            details: '',
+            soldCount: 0,
+            remark: '',
+            imageList: [],
+            boundStaffIds: []
+          },
+          formRules: {
+            name: [
+              { required: true, message: '请输入服务名称', trigger: 'blur' },
+              { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+            ],
+            type: [
+              { required: true, message: '请选择服务类型', trigger: 'change' }
+            ],
+            price: [
+              { required: true, message: '请输入价格', trigger: 'blur' }
+            ],
+            duration: [
+              { required: true, message: '请输入预估时长', trigger: 'blur' }
+            ]
+          },
+          typeOptions: [
+            { dictValue: 'shzl', dictLabel: '生活照料' },
+            { dictValue: 'lchl', dictLabel: '临床护理' },
+            { dictValue: 'khhl', dictLabel: '康复护理' },
+            { dictValue: 'xlgh', dictLabel: '心理关怀' },
+            { dictValue: 'smzf', dictLabel: '上门做饭' },
+            { dictValue: 'jkgl', dictLabel: '健康管理' },
+            { dictValue: 'ptjy', dictLabel: '陪同就医' },
+            { dictValue: 'rcqj', dictLabel: '日常清洁' },
+            { dictValue: 'smwx', dictLabel: '上门维修' },
+            { dictValue: 'yyxz', dictLabel: '预约巡诊' }
+          ],
+          serviceList: [
+            { id: 1, name: '上门四菜一汤', type: 'smzf', desc: '专业厨师上门烹饪四菜一汤', price: 120, duration: 2, status: '1', tags: ['美食', '营养', '家常菜'], boundStaffIds: [] },
+            { id: 2, name: '马桶疏通服务', type: 'smwx', desc: '专业疏通各类马桶堵塞', price: 80, duration: 1, status: '1', tags: ['专业', '快速'], boundStaffIds: [] },
+            { id: 3, name: '专业墙皮修复', type: 'smwx', desc: '修复墙面裂缝、脱落等问题', price: 150, duration: 2.5, status: '1', tags: ['专业', '美观'], boundStaffIds: [] },
+            { id: 4, name: '营养美味快餐定制', type: 'smzf', desc: '根据需求定制营养均衡的快餐', price: 100, duration: 1.5, status: '1', tags: ['美食', '营养', '定制'], boundStaffIds: [] },
+            { id: 5, name: '年轻陪聊服务', type: 'xlgh', desc: '提供专业心理疏导和陪伴聊天', price: 120, duration: 2, status: '1', tags: ['温暖', '贴心'], boundStaffIds: [] },
+            { id: 6, name: '空调清洗保养', type: 'rcqj', desc: '专业清洗空调，延长使用寿命', price: 150, duration: 1.5, status: '1', tags: ['专业', '彻底'], boundStaffIds: [] }
+          ]
+        }
+      },
+      created() {
+        // 检查URL参数，根据参数切换页面
+        // const urlParams = new URLSearchParams(window.location.search);
+        // const page = urlParams.get('page');
+        // if (page === 'service') {
+        //   this.activePage = 'service';
+        // }
+      },
+      computed: {
+        filteredList() {
+          return this.serviceList.filter(item => {
+            return (!this.searchForm.name || item.name.includes(this.searchForm.name)) &&
+              (!this.searchForm.type || item.type === this.searchForm.type) &&
+              (!this.searchForm.status || item.status === this.searchForm.status);
+          });
+        },
+        // 服务人员列表过滤
+        filteredStaffList() {
+          return this.getStaffList().filter(staff => {
+            // 根据关键词过滤
+            if (this.staffSearchKeyword && !staff.name.includes(this.staffSearchKeyword)) {
+              return false;
+            }
+            // 根据服务类型匹配过滤
+            if (this.currentService && staff.serviceTypes) {
+              // 检查服务人员的服务类型是否包含当前服务的类型
+              return staff.serviceTypes.includes(this.currentService.type);
+            }
+            return true;
+          });
+        },
+        // 已绑定的服务人员列表
+        boundStaffList() {
+          if (!this.currentService || !this.tempBoundStaffIds.length) {
+            return [];
+          }
+          return this.getStaffList().filter(staff => this.tempBoundStaffIds.includes(staff.id));
+        }
+      },
+      methods: {
+        handleMenu(index) {
+          switch (index) {
+            case '1':
+              window.location.href = 'index.html';
+              break;
+            case '2':
+              this.activePage = 'service';
+              break;
+            case '3':
+              window.location.href = 'staffManagement.html';
+              break;
+            case '4':
+              window.location.href = 'elderlyInstitution.html';
+              break;
+            case '5':
+              window.location.href = 'serviceProvider.html';
+              break;
+            case '6':
+              window.location.href = 'orderManagement.html';
+              break;
+          }
+        },
+        handleSearch() {
+          // 搜索功能由计算属性实现
+        },
+        resetSearch() {
+          this.searchForm = { name: '', type: '', status: '' };
+          this.handleSearch();
+        },
+        openDialog(type, row) {
+          this.dialogTitle = type === 'add' ? '新增服务' : '编辑服务';
+          if (type === 'edit') {
+            this.form = JSON.parse(JSON.stringify(row));
+            if (!this.form.tags) {
+              this.form.tags = [];
+            }
+            if (!this.form.imageList) {
+              this.form.imageList = [];
+            }
+            if (!this.form.boundStaffIds) {
+              this.form.boundStaffIds = [];
+            }
+          } else {
+            this.form = {
+              id: null,
+              name: '',
+              type: '',
+              desc: '',
+              price: 0,
+              duration: 0,
+              status: '1',
+              tags: [],
+              details: '',
+              soldCount: 0,
+              remark: '',
+              imageList: [],
+              boundStaffIds: []
+            };
+          }
+          this.dialogVisible = true;
+        },
+        // 打开绑定服务人员弹窗
+        openBindStaffDialog(service) {
+          this.currentService = JSON.parse(JSON.stringify(service));
+          this.tempBoundStaffIds = service.boundStaffIds ? [...service.boundStaffIds] : [];
+          this.staffSearchKeyword = '';
+          this.bindStaffDialogVisible = true;
+        },
+        // 获取服务人员列表
+        getStaffList() {
+          // 模拟从staffManagement.html获取的服务人员数据
+          return [
+            {
+              id: 1,
+              name: '张三',
+              age: 35,
+              serviceTypes: ['shzl', 'smzf'],
+              workYears: 5,
+              status: '1'
+            },
+            {
+              id: 2,
+              name: '李四',
+              age: 28,
+              serviceTypes: ['smwx', 'rcqj'],
+              workYears: 3,
+              status: '1'
+            },
+            {
+              id: 3,
+              name: '王五',
+              age: 42,
+              serviceTypes: ['smzf'],
+              workYears: 10,
+              status: '1'
+            },
+            {
+              id: 4,
+              name: '赵六',
+              age: 32,
+              serviceTypes: ['xlgh'],
+              workYears: 4,
+              status: '0'
+            }
+          ];
+        },
+        // 检查服务人员是否已绑定
+        isStaffBound(staffId) {
+          return this.tempBoundStaffIds.includes(staffId);
+        },
+        // 切换绑定/解绑服务人员
+        toggleBindStaff(staff) {
+          if (this.isStaffBound(staff.id)) {
+            this.unbindStaff(staff);
+          } else {
+            this.bindStaff(staff);
+          }
+        },
+        // 绑定服务人员
+        bindStaff(staff) {
+          if (!this.tempBoundStaffIds.includes(staff.id)) {
+            this.tempBoundStaffIds.push(staff.id);
+            this.$message.success(`已绑定服务人员：${staff.name}`);
+          }
+        },
+        // 解绑服务人员
+        unbindStaff(staff) {
+          const index = this.tempBoundStaffIds.indexOf(staff.id);
+          if (index !== -1) {
+            this.tempBoundStaffIds.splice(index, 1);
+            this.$message.success(`已解绑服务人员：${staff.name}`);
+          }
+        },
+        // 保存绑定的服务人员
+        saveBindStaff() {
+          if (this.currentService) {
+            // 找到当前服务在列表中的索引
+            const index = this.serviceList.findIndex(item => item.id === this.currentService.id);
+            if (index !== -1) {
+              // 更新服务的boundStaffIds
+              this.serviceList[index].boundStaffIds = [...this.tempBoundStaffIds];
+              this.$message.success('服务人员绑定已保存');
+            }
+          }
+          this.bindStaffDialogVisible = false;
+        },
+        handleSave() {
+          if (this.form.id) {
+            // 编辑现有服务
+            const index = this.serviceList.findIndex(item => item.id === this.form.id);
+            if (index !== -1) {
+              this.serviceList.splice(index, 1, Object.assign({}, this.form));
+            }
+          } else {
+            // 添加新服务
+            const newId = this.serviceList.length > 0 ? Math.max(...this.serviceList.map(item => item.id)) + 1 : 1;
+            this.serviceList.push(Object.assign({}, this.form, { id: newId }));
+          }
+          this.dialogVisible = false;
+          this.$message.success('操作成功');
+        },
+        handleDelete(row) {
+          this.$confirm('确认删除该服务?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.serviceList = this.serviceList.filter(item => item.id !== row.id);
+            this.$message.success('删除成功');
+          }).catch(() => { });
+        },
+        handleSizeChange(val) {
+          this.pageSize = val;
+        },
+        handleCurrentChange(val) {
+          this.currentPage = val;
+        },
+        handleStatusChange(row, val) {
+          this.tableLoading = true;
+          setTimeout(() => {
+            row.status = val;
+            this.$message.success(`服务「${row.name}」已${val === '1' ? '启用' : '禁用'}`);
+            this.tableLoading = false;
+          }, 300);
+        },
+        getTypeLabel(typeValue) {
+          const typeItem = this.typeOptions.find(item => item.dictValue === typeValue);
+          return typeItem ? typeItem.dictLabel : '未知类型';
+        },
+        submitForm() {
+          this.$refs.serviceForm.validate((valid) => {
+            if (valid) {
+              this.handleSave();
+            } else {
+              this.$message.warning('请完善表单信息');
+              return false;
+            }
+          });
+        },
+        showInputTag() {
+          this.inputTagVisible = true;
+          this.$nextTick(_ => {
+            this.$refs.saveTagInput.$refs.input.focus();
+          });
+        },
+        handleInputConfirm() {
+          let inputValue = this.inputTagValue;
+          if (inputValue) {
+            if (!this.form.tags) {
+              this.form.tags = [];
+            }
+            if (!this.form.tags.includes(inputValue)) {
+              this.form.tags.push(inputValue);
+            }
+          }
+          this.inputTagVisible = false;
+          this.inputTagValue = '';
+        },
+        handleRemoveTag(tag) {
+          this.form.tags.splice(this.form.tags.indexOf(tag), 1);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

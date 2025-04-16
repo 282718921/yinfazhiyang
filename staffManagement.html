@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', Arial, sans-serif;
+    }
+    #app {
+      height: 100%;
+      display: flex;
+    }
+    .sidebar {
+      width: 200px;
+      background: #304156;
+      color: white;
+    }
+    .sidebar .logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #263445;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      height: 60px;
+      line-height: 60px;
+      padding-left: 20px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .content {
+      padding: 20px;
+      background-color: #f0f2f5;
+      flex: 1;
+      overflow: auto;
+    }
+    /* 表格样式优化 */
+    .el-table {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+    .el-table th {
+      background-color: #f5f7fa !important;
+      color: #606266;
+      font-weight: bold;
+    }
+    .el-table--striped .el-table__body tr.el-table__row--striped td {
+      background-color: #fafafa;
+    }
+    /* 搜索表单样式 */
+    .search-form .el-card__header {
+      padding: 12px 20px;
+      background-color: #f5f7fa;
+    }
+    /* 按钮样式优化 */
+    .el-button--primary {
+      background-color: #409EFF;
+      border-color: #409EFF;
+    }
+    .el-button--primary:hover {
+      background-color: #66b1ff;
+      border-color: #66b1ff;
+    }
+    /* 分页样式 */
+    .pagination-container {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+    /* 时间线样式 */
+    .time-line {
+      padding-left: 20px;
+      position: relative;
+    }
+    .time-line-item {
+      position: relative;
+      padding-bottom: 20px;
+      padding-left: 20px;
+    }
+    .time-line-item:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #409EFF;
+    }
+    .time-line-item:after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 16px;
+      width: 2px;
+      height: calc(100% - 16px);
+      background-color: #e4e7ed;
+    }
+    .time-line-item:last-child:after {
+      display: none;
+    }
+    .time-line-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .time-line-content {
+      color: #606266;
+      font-size: 14px;
+    }
+    /* 证书列表样式 */
+    .certificate-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #ebeef5;
+      border-radius: 4px;
+      background-color: #fafafa;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s;
+    }
+    .certificate-item:hover {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-color: #d9ecff;
+    }
+    .certificate-item:last-child {
+      margin-bottom: 0;
+    }
+    .certificate-name {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .certificate-upload {
+      margin: 0 10px;
+    }
+    .certificate-preview {
+      margin: 0 10px;
+    }
+    .certificate-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ebeef5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    /* 表单分区样式 */
+    .form-section {
+      background-color: #fff;
+      border-radius: 4px;
+      padding: 15px 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+      margin-bottom: 5px;
+    }
+    .section-header i {
+      margin-right: 8px;
+      color: #409EFF;
+    }
+    .el-divider {
+      margin: 12px 0 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="logo">管理系统</div>
+      <el-menu default-active="3" @select="handleMenu" background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
+        <el-menu-item index="1">
+          <i class="el-icon-s-home"></i>
+          <span slot="title">首页</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <i class="el-icon-s-grid"></i>
+          <span slot="title">服务管理</span>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <i class="el-icon-user"></i>
+          <span slot="title">服务人员管理</span>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <i class="el-icon-office-building"></i>
+          <span slot="title">养老机构管理</span>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <i class="el-icon-s-shop"></i>
+          <span slot="title">服务商管理</span>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <i class="el-icon-s-order"></i>
+          <span slot="title">订单管理</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <!-- 主区域 -->
+    <div class="main">
+      <div class="header">后台管理系统</div>
+      <div class="content">
+        <!-- 服务人员管理 -->
+        <div v-if="activePage === 'staff'">
+          <!-- 搜索区域 -->
+          <el-card class="search-form" style="margin-bottom: 20px;">
+            <div slot="header" style="font-weight: bold;"><i class="el-icon-search" style="margin-right: 5px;"></i>搜索条件</div>
+            <el-form :inline="true" :model="searchForm" size="small">
+              <el-form-item label="姓名">
+                <el-input v-model="searchForm.name" placeholder="请输入姓名" clearable></el-input>
+              </el-form-item>
+              <el-form-item label="服务类型">
+                <el-select v-model="searchForm.serviceTypes" placeholder="请选择服务类型" clearable style="width: 180px;">
+                  <el-option v-for="item in typeOptions" :key="item.dictValue" :label="item.dictLabel" :value="item.dictValue" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="状态">
+                <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+                  <el-option label="可分配任务" value="1"></el-option>
+                  <el-option label="不可分配任务" value="0"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+                <el-button icon="el-icon-refresh" @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+
+          <!-- 操作按钮 -->
+          <div style="margin-bottom: 15px;">
+            <el-button type="primary" icon="el-icon-plus" size="small" @click="openDialog('add')">新增服务人员</el-button>
+          </div>
+
+          <!-- 表格数据 -->
+          <el-table 
+            :data="filteredStaffList" 
+            style="width: 100%;" 
+            border 
+            stripe 
+            highlight-current-row
+            :header-cell-style="{backgroundColor: '#f5f7fa', color: '#606266', fontWeight: 'bold'}"
+            v-loading="tableLoading">
+            <template slot="empty">
+              <div style="padding: 30px 0; text-align: center;">
+                <i class="el-icon-user" style="font-size: 30px; color: #909399;"></i>
+                <p style="margin-top: 10px; color: #909399;">暂无数据</p>
+              </div>
+            </template>
+            <el-table-column prop="name" label="姓名" min-width="100" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="age" label="年龄" width="80" align="center"></el-table-column>
+            <el-table-column prop="serviceTypes" label="服务类型" min-width="120">
+              <template v-slot="{row}">
+                <el-tag 
+                  v-if="row.serviceTypes && row.serviceTypes.length > 0"
+                  v-for="(type, index) in row.serviceTypes" 
+                  :key="index"
+                  size="small" 
+                  effect="plain" 
+                  type="primary"
+                  style="margin-right: 4px; margin-bottom: 4px;">
+                  {{ getTypeLabel(type) }}
+                </el-tag>
+                <el-tag v-else-if="row.serviceType" size="small" effect="plain" type="primary">
+                  {{ getTypeLabel(row.serviceType) }}
+                </el-tag>
+                <span v-else style="color: #909399; font-size: 12px;">暂无服务类型</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="phone" label="联系方式" min-width="120"></el-table-column>
+            <el-table-column prop="certificates" label="相关证书" min-width="120">
+              <template v-slot="{row}">
+                <el-tag 
+                  v-for="(cert, index) in row.certificates" 
+                  :key="index" 
+                  size="mini" 
+                  effect="plain" 
+                  style="margin-right: 4px; margin-bottom: 4px;">
+                  {{ cert.name }}
+                </el-tag>
+                <span v-if="!row.certificates || row.certificates.length === 0" style="color: #909399; font-size: 12px;">暂无证书</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="workYears" label="从业年限" width="100" align="center">
+              <template v-slot="{row}">
+                <span>{{ row.workYears }}年</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="boundServices" label="绑定服务" min-width="150">
+              <template v-slot="{row}">
+                <el-tag 
+                  v-for="(service, index) in row.boundServices" 
+                  :key="index" 
+                  size="mini" 
+                  type="success"
+                  effect="plain" 
+                  style="margin-right: 4px; margin-bottom: 4px;">
+                  {{ service.name }}
+                </el-tag>
+                <span v-if="!row.boundServices || row.boundServices.length === 0" style="color: #909399; font-size: 12px;">暂无绑定服务</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="address" label="家庭住址" min-width="180" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="company" label="所属公司" min-width="120" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="orderCount" label="服务单量" width="100" align="center">
+              <template v-slot="{row}">
+                <span style="font-weight: bold;">{{ row.orderCount || 0 }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="100" align="center">
+              <template v-slot="{row}">
+                <el-switch
+                  v-model="row.status"
+                  active-value="1"
+                  inactive-value="0"
+                  @change="(val) => handleStatusChange(row, val)"
+                  active-color="#13ce66"
+                  inactive-color="#ff4949">
+                </el-switch>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="180" align="center" fixed="right">
+              <template v-slot="{row}">
+                <el-button size="mini" type="primary" icon="el-icon-edit" circle @click="openDialog('edit', row)" title="编辑"></el-button>
+                <el-button size="mini" type="danger" icon="el-icon-delete" circle @click="handleDelete(row)" title="删除"></el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="pagination-container" style="margin-top: 20px; padding: 10px; background: #fff; border-radius: 4px;">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[5, 10, 20]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="filteredStaffList.length"
+              background
+              style="text-align: right;">
+            </el-pagination>
+          </div>
+
+          <!-- 弹窗表单 -->
+          <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="1000px">
+            <el-form :model="form" :rules="formRules" ref="staffForm" label-width="120px" size="small">
+              <!-- 基本信息 -->
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-user"></i>
+                  <span>基本信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="姓名" prop="name">
+                      <el-input v-model="form.name" placeholder="请输入姓名"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="出生日期" prop="birthDate">
+                      <el-date-picker
+                        v-model="form.birthDate"
+                        type="date"
+                        placeholder="选择日期"
+                        style="width: 100%"
+                        value-format="yyyy-MM-dd">
+                      </el-date-picker>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="年龄" prop="age">
+                      <el-input-number v-model="form.age" :min="18" :max="70" style="width: 100%"></el-input-number>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="联系方式" prop="phone">
+                      <el-input v-model="form.phone" placeholder="请输入手机号码"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="文化水平" prop="education">
+                      <el-select v-model="form.education" placeholder="请选择文化水平" style="width: 100%">
+                        <el-option label="小学" value="primary"></el-option>
+                        <el-option label="初中" value="juniorHigh"></el-option>
+                        <el-option label="高中" value="seniorHigh"></el-option>
+                        <el-option label="大专" value="college"></el-option>
+                        <el-option label="本科" value="bachelor"></el-option>
+                        <el-option label="硕士" value="master"></el-option>
+                        <el-option label="博士" value="doctor"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="从业年限" prop="workYears">
+                      <el-input-number v-model="form.workYears" :min="0" :max="50" style="width: 100%"></el-input-number>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="所在地区" prop="region">
+                      <el-cascader
+                        v-model="form.region"
+                        :options="regionOptions"
+                        placeholder="请选择所在地区"
+                        style="width: 100%">
+                      </el-cascader>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="详细地址" prop="address">
+                      <el-input v-model="form.address" placeholder="请输入详细地址"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="所属公司" prop="company">
+                      <el-input v-model="form.company" placeholder="请输入所属公司"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="服务单量" prop="orderCount">
+                      <el-input-number v-model="form.orderCount" :min="0" style="width: 100%"></el-input-number>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="状态" prop="status">
+                      <el-radio-group v-model="form.status">
+                        <el-radio label="1">可分配任务</el-radio>
+                        <el-radio label="0">不可分配任务</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+              
+              <!-- 证件信息 -->
+              <div class="form-section" style="margin-top: 20px;">
+                <div class="section-header">
+                  <i class="el-icon-document"></i>
+                  <span>证件信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="证件照">
+                      <el-upload
+                        action="#"
+                        list-type="picture-card"
+                        :auto-upload="false"
+                        :file-list="form.idCardImages">
+                        <i class="el-icon-plus"></i>
+                        <div slot="tip" class="el-upload__tip">请上传清晰的证件照片</div>
+                      </el-upload>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="相关证书">
+                      <div v-for="(cert, index) in form.certificates" :key="index" class="certificate-item">
+                        <div class="certificate-name">
+                          <el-input v-model="cert.name" placeholder="证书名称"></el-input>
+                        </div>
+                        <div class="certificate-upload">
+                          <el-upload
+                            action="#"
+                            :auto-upload="false"
+                            :show-file-list="false"
+                            :file-list="cert.images ? [cert.images] : []"
+                            :on-change="(file) => handleCertificateUpload(file, index)">
+                            <el-button size="small" type="primary">上传图片</el-button>
+                          </el-upload>
+                        </div>
+                        <div class="certificate-preview" v-if="cert.imageUrl">
+                          <img :src="cert.imageUrl" class="certificate-image" />
+                        </div>
+                        <el-button type="danger" icon="el-icon-delete" size="small" @click="removeCertificate(index)" style="margin-left: 10px;"></el-button>
+                      </div>
+                      <el-button type="primary" icon="el-icon-plus" size="small" @click="addCertificate" style="margin-top: 10px;">添加证书</el-button>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+              
+              <!-- 服务信息 -->
+              <div class="form-section" style="margin-top: 20px;">
+                <div class="section-header">
+                  <i class="el-icon-s-grid"></i>
+                  <span>服务信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="服务类型" prop="serviceTypes">
+                      <el-select v-model="form.serviceTypes" multiple placeholder="请选择服务类型(可多选)" style="width: 100%">
+                        <el-option v-for="item in typeOptions" :key="item.dictValue" :label="item.dictLabel" :value="item.dictValue" />
+                      </el-select>
+                      <div class="el-form-item__description" style="font-size: 12px; color: #909399; margin-top: 5px;">
+                        <i class="el-icon-info"></i> 可以选择多个服务类型，如健康管理和陪同就医
+                      </div>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="绑定服务">
+                      <el-transfer
+                        v-model="form.boundServiceIds"
+                        :data="serviceList"
+                        :titles="['可选服务', '已选服务']"
+                        :button-texts="['移除', '添加']"
+                        :props="{
+                          key: 'id',
+                          label: 'name'
+                        }"
+                        style="text-align: left; width: 100%">
+                      </el-transfer>
+                      <div class="el-form-item__description" style="font-size: 12px; color: #909399; margin-top: 5px;">
+                        <i class="el-icon-info"></i> 绑定服务表示该服务人员可以担任公司的多个服务种类
+                      </div>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+              
+              <!-- 工作经历 -->
+              <div class="form-section" style="margin-top: 20px;">
+                <div class="section-header">
+                  <i class="el-icon-time"></i>
+                  <span>工作经历</span>
+                </div>
+                <el-divider></el-divider>
+                <div class="time-line">
+                  <div v-for="(exp, index) in form.experiences" :key="index" class="time-line-item">
+                    <div class="time-line-header" style="display: flex; justify-content: space-between; align-items: center;">
+                      <div>
+                        <el-date-picker
+                          v-model="exp.timeRange"
+                          type="daterange"
+                          range-separator="至"
+                          start-placeholder="开始日期"
+                          end-placeholder="结束日期"
+                          value-format="yyyy-MM-dd">
+                        </el-date-picker>
+                      </div>
+                      <el-button type="danger" icon="el-icon-delete" size="mini" circle @click="removeExperience(index)"></el-button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                      <el-input v-model="exp.company" placeholder="公司/机构名称"></el-input>
+                    </div>
+                    <div style="margin-top: 10px;">
+                      <el-input v-model="exp.position" placeholder="职位"></el-input>
+                    </div>
+                    <div style="margin-top: 10px;">
+                      <el-input type="textarea" v-model="exp.description" placeholder="工作描述" rows="3"></el-input>
+                    </div>
+                  </div>
+                  <el-button type="primary" icon="el-icon-plus" size="small" @click="addExperience" style="margin-top: 20px;">添加工作经历</el-button>
+                </div>
+              </div>
+            </el-form>
+            <div slot="footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="submitForm">保存</el-button>
+            </div>
+          </el-dialog>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          activePage: 'staff',
+          activeTab: 'basic',
+          currentPage: 1,
+          pageSize: 10,
+          searchForm: {
+            name: '',
+            serviceTypes: [],
+            status: ''
+          },
+          tableLoading: false,
+          dialogVisible: false,
+          dialogTitle: '',
+          form: {
+            id: null,
+            name: '',
+            birthDate: '',
+            age: 30,
+            phone: '',
+            education: '',
+            workYears: 0,
+            region: [],
+            address: '',
+            company: '',
+            orderCount: 0,
+            status: '1',
+            serviceType: '',
+            serviceTypes: [],
+            idCardImages: [],
+            certificates: [],
+            boundServiceIds: [],
+            experiences: []
+          },
+          formRules: {
+            name: [
+              { required: true, message: '请输入姓名', trigger: 'blur' },
+              { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+            ],
+            birthDate: [
+              { required: true, message: '请选择出生日期', trigger: 'change' }
+            ],
+            phone: [
+              { required: true, message: '请输入联系方式', trigger: 'blur' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+            ],
+            serviceTypes: [
+              { required: true, message: '请选择服务类型', trigger: 'change', type: 'array' }
+            ],
+            address: [
+              { required: true, message: '请输入详细地址', trigger: 'blur' }
+            ]
+          },
+          typeOptions: [
+            { dictValue: 'bjhs', dictLabel: '保洁护理' },
+            { dictValue: 'jdqx', dictLabel: '家电清修' },
+            { dictValue: 'smzf', dictLabel: '上门做饭' },
+            { dictValue: 'xlgh', dictLabel: '心理关怀' },
+            { dictValue: 'ptjy', dictLabel: '陪同就医' },
+            { dictValue: 'rcqj', dictLabel: '日常清洁' },
+            { dictValue: 'smwx', dictLabel: '上门维修' },
+            { dictValue: 'yyxz', dictLabel: '预约巡诊' }
+          ],
+          regionOptions: [
+            {
+              value: 'beijing',
+              label: '北京',
+              children: [
+                { value: 'chaoyang', label: '朝阳区' },
+                { value: 'haidian', label: '海淀区' }
+              ]
+            },
+            {
+              value: 'shanghai',
+              label: '上海',
+              children: [
+                { value: 'pudong', label: '浦东新区' },
+                { value: 'huangpu', label: '黄浦区' }
+              ]
+            }
+          ],
+          serviceList: [
+            { id: 1, name: '上门擦玻璃', type: 'bjhs' },
+            { id: 2, name: '修马桶', type: 'jdqx' },
+            { id: 3, name: '上门做饭四菜一汤', type: 'smzf' },
+            { id: 4, name: '空调清洗', type: 'jdqx' },
+            { id: 5, name: '修漏水', type: 'jdqx' },
+            { id: 6, name: '墙皮掉落修复', type: 'smwx' }
+          ],
+          staffList: [
+            { 
+              id: 1, 
+              name: '张三', 
+              age: 35, 
+              serviceType: 'bjhs', 
+              serviceTypes: ['bjhs', 'jdqx'], 
+              phone: '13900139000', 
+              certificates: [{name: '保洁证书'}, {name: '健康证'}], 
+              workYears: 5, 
+              boundServices: [{id: 1, name: '上门擦玻璃'}, {id: 2, name: '空调清洗'}],
+              address: '北京市朝阳区建国路88号', 
+              company: '北京家政服务有限公司',
+              orderCount: 120,
+              status: '1'
+            },
+            { 
+              id: 2, 
+              name: '李四', 
+              age: 28, 
+              serviceType: 'jdqx', 
+              serviceTypes: ['jdqx'], 
+              phone: '13800138000', 
+              certificates: [{name: '电工证'}], 
+              workYears: 3, 
+              boundServices: [{id: 2, name: '修马桶'}, {id: 3, name: '修漏水'}],
+              address: '北京市海淀区中关村大街1号', 
+              company: '北京清洁服务有限公司',
+              orderCount: 85,
+              status: '1'
+            },
+            { 
+              id: 3, 
+              name: '王五', 
+              age: 42, 
+              serviceType: 'smzf', 
+              serviceTypes: ['smzf'], 
+              phone: '13700137001', 
+              certificates: [{name: '厨师证'}, {name: '健康证'}], 
+              workYears: 10, 
+              boundServices: [{id: 3, name: '上门做饭四菜一汤'}],
+              address: '北京市海淀区中关村南大街5号', 
+              company: '北京家政服务有限公司',
+              orderCount: 156,
+              status: '1'
+            },
+            { 
+              id: 4, 
+              name: '赵六', 
+              age: 32, 
+              serviceType: 'xlgh', 
+              serviceTypes: ['xlgh'], 
+              phone: '13600136001', 
+              certificates: [{name: '心理咨询师证书'}], 
+              workYears: 4, 
+              boundServices: [{id: 6, name: '墙皮掉落修复'}],
+              address: '上海市黄浦区南京东路100号', 
+              company: '上海心理健康服务中心',
+              orderCount: 68,
+              status: '0'
+            }
+          ]
+        };
+      },
+      computed: {
+        filteredStaffList() {
+          return this.staffList.filter(item => {
+            // 检查名称匹配
+            const nameMatch = !this.searchForm.name || item.name.includes(this.searchForm.name);
+            
+            // 检查服务类型匹配
+            let typeMatch = true;
+            if (this.searchForm.serviceTypes && this.searchForm.serviceTypes.length > 0) {
+              // 检查item.serviceTypes数组中是否包含任何搜索的服务类型
+              if (item.serviceTypes && item.serviceTypes.length > 0) {
+                typeMatch = item.serviceTypes.some(type => this.searchForm.serviceTypes.includes(type));
+              } else if (item.serviceType) {
+                // 兼容旧数据，检查单个serviceType
+                typeMatch = this.searchForm.serviceTypes.includes(item.serviceType);
+              } else {
+                typeMatch = false;
+              }
+            }
+            
+            // 检查状态匹配
+            const statusMatch = !this.searchForm.status || item.status === this.searchForm.status;
+            
+            return nameMatch && typeMatch && statusMatch;
+          });
+        }
+      },
+      methods: {
+        handleMenu(index) {
+          switch (index) {
+            case '1':
+              window.location.href = 'index.html';
+              break;
+            case '2':
+              window.location.href = 'servicePage.html';
+              break;
+            case '3':
+              this.activePage = 'staff';
+              break;
+            case '4':
+              window.location.href = 'elderlyInstitution.html';
+              break;
+            case '5':
+              window.location.href = 'serviceProvider.html';
+              break;
+            case '6':
+              window.location.href = 'orderManagement.html';
+              break;
+          }
+        },
+        handleSearch() {
+          // 搜索功能由计算属性实现
+        },
+        resetSearch() {
+          this.searchForm = { name: '', serviceTypes: [], status: '' };
+        },
+        openDialog(type, row) {
+          this.dialogTitle = type === 'add' ? '新增服务人员' : '编辑服务人员';
+          this.activeTab = 'basic';
+          
+          if (type === 'edit') {
+            // 深拷贝，避免直接修改列表数据
+            const rowData = JSON.parse(JSON.stringify(row));
+            
+            // 处理绑定服务ID列表
+            const boundServiceIds = [];
+            if (rowData.boundServices && rowData.boundServices.length > 0) {
+              rowData.boundServices.forEach(service => {
+                boundServiceIds.push(service.id);
+              });
+            }
+            
+            this.form = {
+              ...rowData,
+              boundServiceIds: boundServiceIds,
+              // 确保所有必要字段都存在
+              certificates: rowData.certificates || [],
+              idCardImages: rowData.idCardImages || [],
+              experiences: rowData.experiences || []
+            };
+          } else {
+            // 新增时重置表单
+            this.form = {
+              id: null,
+              name: '',
+              birthDate: '',
+              age: 30,
+              phone: '',
+              education: '',
+              workYears: 0,
+              region: [],
+              address: '',
+              company: '',
+              orderCount: 0,
+              status: '1',
+              serviceType: '',
+              idCardImages: [],
+              certificates: [],
+              boundServiceIds: [],
+              experiences: []
+            };
+          }
+          
+          this.dialogVisible = true;
+          
+          // 在下一个事件循环中重置表单验证
+          this.$nextTick(() => {
+            if (this.$refs.staffForm) {
+              this.$refs.staffForm.clearValidate();
+            }
+          });
+        },
+        submitForm() {
+          this.$refs.staffForm.validate(valid => {
+            if (valid) {
+              this.tableLoading = true;
+              
+              // 模拟API请求延迟
+              setTimeout(() => {
+                // 处理绑定服务
+                const boundServices = [];
+                if (this.form.boundServiceIds && this.form.boundServiceIds.length > 0) {
+                  this.form.boundServiceIds.forEach(id => {
+                    const service = this.serviceList.find(s => s.id === id);
+                    if (service) {
+                      boundServices.push({
+                        id: service.id,
+                        name: service.name
+                      });
+                    }
+                  });
+                }
+                
+                // 确保兼容旧数据，同时支持新的多选服务类型
+                let serviceTypes = this.form.serviceTypes || [];
+                if (!serviceTypes.length && this.form.serviceType) {
+                  serviceTypes = [this.form.serviceType];
+                }
+                
+                const staffData = {
+                  ...this.form,
+                  boundServices: boundServices,
+                  serviceTypes: serviceTypes
+                };
+                
+                if (this.form.id) {
+                  // 编辑现有服务人员
+                  const index = this.staffList.findIndex(item => item.id === this.form.id);
+                  if (index !== -1) {
+                    this.staffList.splice(index, 1, staffData);
+                  }
+                } else {
+                  // 添加新服务人员
+                  const newId = this.staffList.length > 0 ? Math.max(...this.staffList.map(item => item.id)) + 1 : 1;
+                  this.staffList.push({
+                    ...staffData,
+                    id: newId
+                  });
+                }
+                
+                this.dialogVisible = false;
+                this.$message.success('操作成功');
+                this.tableLoading = false;
+              }, 500);
+            }
+          });
+        },
+        handleDelete(row) {
+          this.$confirm('确认删除该服务人员?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.tableLoading = true;
+            
+            // 模拟API请求延迟
+            setTimeout(() => {
+              this.staffList = this.staffList.filter(item => item.id !== row.id);
+              this.$message.success('删除成功');
+              this.tableLoading = false;
+            }, 500);
+          }).catch(() => {});
+        },
+        handleSizeChange(val) {
+          this.pageSize = val;
+        },
+        handleCurrentChange(val) {
+          this.currentPage = val;
+        },
+        handleStatusChange(row, val) {
+          this.tableLoading = true;
+          
+          // 模拟API请求延迟
+          setTimeout(() => {
+            row.status = val;
+            this.$message.success(`服务人员「${row.name}」状态已${val === '1' ? '设为可分配任务' : '设为不可分配任务'}`);
+            this.tableLoading = false;
+          }, 300);
+        },
+        getTypeLabel(typeValue) {
+          const type = this.typeOptions.find(item => item.dictValue === typeValue);
+          return type ? type.dictLabel : typeValue;
+        },
+        getServiceTypeLabels(types) {
+          if (!types || !Array.isArray(types)) return '';
+          return types.map(type => this.getTypeLabel(type)).join(', ');
+        },
+        addCertificate() {
+          if (!this.form.certificates) {
+            this.form.certificates = [];
+          }
+          this.form.certificates.push({
+            name: '',
+            images: [],
+            imageUrl: ''
+          });
+        },
+        removeCertificate(index) {
+          this.form.certificates.splice(index, 1);
+        },
+        handleCertificateUpload(file, index) {
+          // 模拟上传，实际项目中应该调用上传API
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.$set(this.form.certificates[index], 'imageUrl', e.target.result);
+            this.$set(this.form.certificates[index], 'images', [file]);
+          };
+          reader.readAsDataURL(file.raw);
+        },
+        addExperience() {
+          if (!this.form.experiences) {
+            this.form.experiences = [];
+          }
+          this.form.experiences.push({
+            timeRange: [],
+            company: '',
+            position: '',
+            description: ''
+          });
+        },
+        removeExperience(index) {
+          this.form.experiences.splice(index, 1);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

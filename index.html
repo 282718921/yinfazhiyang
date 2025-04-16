@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', Arial, sans-serif;
+    }
+
+    #app {
+      height: 100%;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #304156;
+      color: white;
+    }
+
+    .sidebar .logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #263445;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 60px;
+      line-height: 60px;
+      padding-left: 20px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .content {
+      padding: 20px;
+      background-color: #f0f2f5;
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* 数据卡片样式 */
+    .data-card {
+      height: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+    }
+
+    .data-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .data-card-header {
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .data-card-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+    }
+
+    .data-card-body {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .data-card-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #303133;
+      margin-right: 15px;
+    }
+
+    .data-card-icon {
+      font-size: 48px;
+      margin-right: 20px;
+    }
+
+    .data-card-footer {
+      padding: 10px 20px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #909399;
+    }
+
+    /* 图表卡片样式 */
+    .chart-card {
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .chart-card-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .chart-card-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+    }
+
+    .chart-container {
+      height: 300px;
+      padding: 10px;
+    }
+
+    /* 最近订单列表样式 */
+    .recent-orders {
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .recent-orders-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .recent-orders-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+    }
+
+    /* 图标颜色 */
+    .icon-service {
+      color: #409EFF;
+    }
+
+    .icon-staff {
+      color: #67C23A;
+    }
+
+    .icon-institution {
+      color: #E6A23C;
+    }
+
+    .icon-provider {
+      color: #F56C6C;
+    }
+
+    .icon-order {
+      color: #909399;
+    }
+
+    /* 欢迎信息样式 */
+    .welcome-section {
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .welcome-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin-right: 20px;
+      background-color: #409EFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 32px;
+    }
+
+    .welcome-info {
+      flex: 1;
+    }
+
+    .welcome-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #303133;
+    }
+
+    .welcome-subtitle {
+      color: #909399;
+      font-size: 14px;
+    }
+
+    .welcome-actions {
+      margin-left: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="logo">管理系统</div>
+      <el-menu default-active="1" @select="handleMenu" background-color="#304156" text-color="#bfcbd9"
+        active-text-color="#409EFF">
+        <el-menu-item index="1">
+          <i class="el-icon-s-home"></i>
+          <span slot="title">首页</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <i class="el-icon-s-grid"></i>
+          <span slot="title">服务管理</span>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <i class="el-icon-user"></i>
+          <span slot="title">服务人员管理</span>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <i class="el-icon-office-building"></i>
+          <span slot="title">养老机构管理</span>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <i class="el-icon-s-shop"></i>
+          <span slot="title">服务商管理</span>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <i class="el-icon-s-order"></i>
+          <span slot="title">订单管理</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <!-- 主区域 -->
+    <div class="main">
+      <div class="header">后台管理系统</div>
+      <div class="content">
+        <!-- 首页内容 -->
+        <div v-if="activePage === 'home'">
+          <!-- 欢迎信息 -->
+          <div class="welcome-section">
+            <div class="welcome-avatar">
+              <i class="el-icon-user"></i>
+            </div>
+            <div class="welcome-info">
+              <div class="welcome-title">欢迎回来，管理员</div>
+              <div class="welcome-subtitle">今天是 {{ currentDate }}，祝您工作愉快！</div>
+            </div>
+            <div class="welcome-actions">
+              <el-button type="primary" icon="el-icon-refresh" @click="refreshDashboard">刷新数据</el-button>
+            </div>
+          </div>
+
+          <!-- 数据卡片 -->
+          <el-row :gutter="20" style="margin-bottom: 20px; display: none;">
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">服务总数</div>
+                  <el-button type="text" icon="el-icon-more" @click="navigateTo('service')"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-s-grid data-card-icon icon-service"></i>
+                  <div class="data-card-value">{{ statistics.serviceCount }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 12%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">服务人员</div>
+                  <el-button type="text" icon="el-icon-more" @click="navigateTo('staff')"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-user data-card-icon icon-staff"></i>
+                  <div class="data-card-value">{{ statistics.staffCount }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 8%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">养老机构</div>
+                  <el-button type="text" icon="el-icon-more" @click="navigateTo('institution')"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-office-building data-card-icon icon-institution"></i>
+                  <div class="data-card-value">{{ statistics.institutionCount }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 5%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">服务商</div>
+                  <el-button type="text" icon="el-icon-more" @click="navigateTo('provider')"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-s-shop data-card-icon icon-provider"></i>
+                  <div class="data-card-value">{{ statistics.providerCount }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 3%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">订单总数</div>
+                  <el-button type="text" icon="el-icon-more" @click="navigateTo('order')"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-s-order data-card-icon icon-order"></i>
+                  <div class="data-card-value">{{ statistics.orderCount }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 15%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="4">
+              <div class="data-card">
+                <div class="data-card-header">
+                  <div class="data-card-title">本月营收</div>
+                  <el-button type="text" icon="el-icon-more"></el-button>
+                </div>
+                <div class="data-card-body">
+                  <i class="el-icon-money data-card-icon" style="color: #F56C6C;"></i>
+                  <div class="data-card-value">¥{{ statistics.monthlyRevenue }}</div>
+                </div>
+                <div class="data-card-footer">
+                  <span>较上月</span>
+                  <span style="color: #67C23A;">
+                    <i class="el-icon-top"></i> 20%
+                  </span>
+                </div>
+              </div>
+            </el-col>
+          </el-row>
+
+          <!-- 图表区域 -->
+          <el-row :gutter="20" style="margin-bottom: 20px; display: none;">
+            <el-col :span="12">
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">订单趋势</div>
+                </div>
+                <div class="chart-container" id="orderTrendChart"></div>
+              </div>
+            </el-col>
+            <el-col :span="12">
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">服务类型分布</div>
+                </div>
+                <div class="chart-container" id="serviceTypeChart"></div>
+              </div>
+            </el-col>
+          </el-row>
+
+          <!-- 最近订单 -->
+          <div class="recent-orders" style="display: none;">
+            <div class="recent-orders-header">
+              <div class="recent-orders-title">最近订单</div>
+              <el-button type="text" @click="navigateTo('order')">查看全部</el-button>
+            </div>
+            <el-table :data="recentOrders" style="width: 100%;" border stripe>
+              <el-table-column prop="orderNo" label="订单编号" width="150"></el-table-column>
+              <el-table-column prop="customerName" label="客户名称" width="120"></el-table-column>
+              <el-table-column prop="serviceName" label="所购服务" min-width="150"></el-table-column>
+              <el-table-column prop="amount" label="支付金额" width="120" align="center">
+                <template v-slot="{row}">
+                  <span style="color: #ff6b6b; font-weight: bold;">¥{{ row.amount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="orderTime" label="下单时间" width="180"></el-table-column>
+              <el-table-column label="订单状态" width="120" align="center">
+                <template v-slot="{row}">
+                  <el-tag :type="getStatusType(row.status)" size="mini">
+                    {{ getStatusText(row.status) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="120" align="center">
+                <template v-slot="{row}">
+                  <el-button size="mini" type="primary" icon="el-icon-view" circle @click="viewOrderDetail(row)"
+                    title="订单详情"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          activePage: 'home',
+          currentDate: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }),
+          statistics: {
+            serviceCount: 28,
+            staffCount: 45,
+            institutionCount: 12,
+            providerCount: 8,
+            orderCount: 156,
+            monthlyRevenue: '28,560'
+          },
+          recentOrders: [
+            { orderNo: 'ORD20230001', customerName: '张三', serviceName: '上门四菜一汤', amount: 120, orderTime: '2023-05-15 14:30:25', status: 'completed' },
+            { orderNo: 'ORD20230002', customerName: '李四', serviceName: '居家康复护理', amount: 200, orderTime: '2023-05-15 16:45:12', status: 'processing' },
+            { orderNo: 'ORD20230003', customerName: '王五', serviceName: '上门打扫卫生', amount: 80, orderTime: '2023-05-16 09:20:45', status: 'pending_service' },
+            { orderNo: 'ORD20230004', customerName: '赵六', serviceName: '陪同就医', amount: 150, orderTime: '2023-05-16 13:10:30', status: 'pending_payment' },
+            { orderNo: 'ORD20230005', customerName: '钱七', serviceName: '健康管理', amount: 300, orderTime: '2023-05-17 10:05:18', status: 'cancelled' }
+          ]
+        };
+      },
+      mounted() {
+        this.initOrderTrendChart();
+        this.initServiceTypeChart();
+      },
+      methods: {
+        handleMenu(index) {
+          switch (index) {
+            case '1':
+              this.activePage = 'home';
+              // 如果在当前页面，则刷新图表
+              if (this.activePage === 'home') {
+                this.$nextTick(() => {
+                  this.initOrderTrendChart();
+                  this.initServiceTypeChart();
+                });
+              }
+              break;
+            case '2':
+              window.location.href = 'servicePage.html';
+              break;
+            case '3':
+              window.location.href = 'staffManagement.html';
+              break;
+            case '4':
+              window.location.href = 'elderlyInstitution.html';
+              break;
+            case '5':
+              window.location.href = 'serviceProvider.html';
+              break;
+            case '6':
+              window.location.href = 'orderManagement.html';
+              break;
+          }
+        },
+        navigateTo(page) {
+          switch (page) {
+            case 'service':
+              window.location.href = 'servicePage.html';
+              break;
+            case 'staff':
+              window.location.href = 'staffManagement.html';
+              break;
+            case 'institution':
+              window.location.href = 'elderlyInstitution.html';
+              break;
+            case 'provider':
+              window.location.href = 'serviceProvider.html';
+              break;
+            case 'order':
+              window.location.href = 'orderManagement.html';
+              break;
+          }
+        },
+        refreshDashboard() {
+          this.$message({
+            message: '数据已刷新',
+            type: 'success'
+          });
+          // 模拟数据刷新
+          this.statistics = {
+            serviceCount: Math.floor(Math.random() * 10) + 25,
+            staffCount: Math.floor(Math.random() * 10) + 40,
+            institutionCount: Math.floor(Math.random() * 5) + 10,
+            providerCount: Math.floor(Math.random() * 3) + 7,
+            orderCount: Math.floor(Math.random() * 20) + 150,
+            monthlyRevenue: (Math.floor(Math.random() * 5000) + 25000).toString()
+          };
+          this.initOrderTrendChart();
+          this.initServiceTypeChart();
+        },
+        getStatusType(status) {
+          switch (status) {
+            case 'pending_payment':
+              return 'warning';
+            case 'pending_service':
+              return 'info';
+            case 'processing':
+              return 'primary';
+            case 'completed':
+              return 'success';
+            case 'cancelled':
+              return 'danger';
+            default:
+              return 'info';
+          }
+        },
+        getStatusText(status) {
+          switch (status) {
+            case 'pending_payment':
+              return '待支付';
+            case 'pending_service':
+              return '待服务';
+            case 'processing':
+              return '服务中';
+            case 'completed':
+              return '已完成';
+            case 'cancelled':
+              return '已取消';
+            default:
+              return '未知状态';
+          }
+        },
+        viewOrderDetail(order) {
+          this.$message({
+            message: `查看订单详情：${order.orderNo}`,
+            type: 'info'
+          });
+          // 跳转到订单管理页面并传递订单ID
+          window.location.href = `orderManagement.html?orderId=${order.orderNo}`;
+        },
+        initOrderTrendChart() {
+          const chartDom = document.getElementById('orderTrendChart');
+          if (!chartDom) return;
+          
+          const myChart = echarts.init(chartDom);
+          const option = {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                type: 'shadow'
+              }
+            },
+            legend: {
+              data: ['订单数量', '营收金额']
+            },
+            grid: {
+              left: '3%',
+              right: '4%',
+              bottom: '3%',
+              containLabel: true
+            },
+            xAxis: [
+              {
+                type: 'category',
+                data: ['1月', '2月', '3月', '4月', '5月', '6月']
+              }
+            ],
+            yAxis: [
+              {
+                type: 'value',
+                name: '订单数量',
+                position: 'left'
+              },
+              {
+                type: 'value',
+                name: '营收金额',
+                position: 'right',
+                axisLabel: {
+                  formatter: '{value} 元'
+                }
+              }
+            ],
+            series: [
+              {
+                name: '订单数量',
+                type: 'bar',
+                data: [20, 25, 30, 35, 40, 45]
+              },
+              {
+                name: '营收金额',
+                type: 'line',
+                yAxisIndex: 1,
+                data: [5000, 6000, 8000, 10000, 12000, 15000]
+              }
+            ]
+          };
+          myChart.setOption(option);
+
+          // 窗口大小变化时重新调整图表大小
+          window.addEventListener('resize', function() {
+            myChart.resize();
+          });
+        },
+        initServiceTypeChart() {
+          const chartDom = document.getElementById('serviceTypeChart');
+          if (!chartDom) return;
+          
+          const myChart = echarts.init(chartDom);
+          const option = {
+            tooltip: {
+              trigger: 'item',
+              formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+              orient: 'vertical',
+              left: 10,
+              data: ['生活照料', '临床护理', '康复护理', '心理关怀', '上门做饭', '其他服务']
+            },
+            series: [
+              {
+                name: '服务类型',
+                type: 'pie',
+                radius: ['50%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                  borderRadius: 10,
+                  borderColor: '#fff',
+                  borderWidth: 2
+                },
+                label: {
+                  show: false,
+                  position: 'center'
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: '18',
+                    fontWeight: 'bold'
+                  }
+                },
+                labelLine: {
+                  show: false
+                },
+                data: [
+                  { value: 35, name: '生活照料' },
+                  { value: 20, name: '临床护理' },
+                  { value: 15, name: '康复护理' },
+                  { value: 10, name: '心理关怀' },
+                  { value: 12, name: '上门做饭' },
+                  { value: 8, name: '其他服务' }
+                ]
+              }
+            ]
+          };
+          myChart.setOption(option);
+
+          // 窗口大小变化时重新调整图表大小
+          window.addEventListener('resize', function() {
+            myChart.resize();
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

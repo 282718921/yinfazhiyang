@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', Arial, sans-serif;
+    }
+
+    #app {
+      height: 100%;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #304156;
+      color: white;
+    }
+
+    .sidebar .logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #263445;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      height: 60px;
+      line-height: 60px;
+      padding-left: 20px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .content {
+      padding: 20px;
+      background-color: #f0f2f5;
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* 表格样式优化 */
+    .el-table {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    .el-table th {
+      background-color: #f5f7fa !important;
+      color: #606266;
+      font-weight: bold;
+    }
+
+    .el-table--striped .el-table__body tr.el-table__row--striped td {
+      background-color: #fafafa;
+    }
+
+    /* 搜索表单样式 */
+    .search-form .el-card__header {
+      padding: 12px 20px;
+      background-color: #f5f7fa;
+    }
+
+    /* 按钮样式优化 */
+    .el-button--primary {
+      background-color: #409EFF;
+      border-color: #409EFF;
+    }
+
+    .el-button--primary:hover {
+      background-color: #66b1ff;
+      border-color: #66b1ff;
+    }
+
+    /* 分页样式 */
+    .pagination-container {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 表单分区样式 */
+    .form-section {
+      background-color: #fff;
+      border-radius: 4px;
+      padding: 15px 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+      margin-bottom: 5px;
+    }
+
+    .section-header i {
+      margin-right: 8px;
+      color: #409EFF;
+    }
+
+    .el-divider {
+      margin: 12px 0 20px;
+    }
+
+    /* 图片上传样式 */
+    .image-preview {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .image-item {
+      position: relative;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .image-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ebeef5;
+    }
+
+    .image-item .delete-icon {
+      position: absolute;
+      right: -6px;
+      top: -6px;
+      color: #f56c6c;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 订单状态标签样式 */
+    .status-tag-pending {
+      background-color: #e6a23c;
+      color: #fff;
+    }
+
+    .status-tag-processing {
+      background-color: #409EFF;
+      color: #fff;
+    }
+
+    .status-tag-completed {
+      background-color: #67c23a;
+      color: #fff;
+    }
+
+    .status-tag-cancelled {
+      background-color: #909399;
+      color: #fff;
+    }
+
+    /* 图片预览样式 */
+    .service-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #ebeef5;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .service-image:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="logo">管理系统</div>
+      <el-menu default-active="6" @select="handleMenu" background-color="#304156" text-color="#bfcbd9"
+        active-text-color="#409EFF">
+        <el-menu-item index="1">
+          <i class="el-icon-s-home"></i>
+          <span slot="title">首页</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <i class="el-icon-s-grid"></i>
+          <span slot="title">服务管理</span>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <i class="el-icon-user"></i>
+          <span slot="title">服务人员管理</span>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <i class="el-icon-office-building"></i>
+          <span slot="title">养老机构管理</span>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <i class="el-icon-s-shop"></i>
+          <span slot="title">服务商管理</span>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <i class="el-icon-s-order"></i>
+          <span slot="title">订单管理</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <!-- 主区域 -->
+    <div class="main">
+      <div class="header">后台管理系统</div>
+      <div class="content">
+        <!-- 订单管理 -->
+        <div v-if="activePage === 'order'">
+          <!-- 搜索区域 -->
+          <el-card class="search-form" style="margin-bottom: 20px;">
+            <div slot="header" style="font-weight: bold;"><i class="el-icon-search" style="margin-right: 5px;"></i>搜索条件
+            </div>
+            <el-form :inline="true" :model="searchForm" size="small">
+              <el-form-item label="订单编号">
+                <el-input v-model="searchForm.orderNo" placeholder="请输入订单编号" clearable></el-input>
+              </el-form-item>
+              <el-form-item label="客户名称">
+                <el-input v-model="searchForm.customerName" placeholder="请输入客户名称" clearable></el-input>
+              </el-form-item>
+              <el-form-item label="联系方式">
+                <el-input v-model="searchForm.contactPhone" placeholder="请输入联系方式" clearable></el-input>
+              </el-form-item>
+              <el-form-item label="订单状态">
+                <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+                  <el-option label="待支付" value="pending_payment"></el-option>
+                  <el-option label="待服务" value="pending_service"></el-option>
+                  <el-option label="服务中" value="processing"></el-option>
+                  <el-option label="已完成" value="completed"></el-option>
+                  <el-option label="已取消" value="cancelled"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="下单时间">
+                <el-date-picker
+                  v-model="searchForm.orderTimeRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  value-format="yyyy-MM-dd">
+                </el-date-picker>
+              </el-form-item>
+              <el-form-item label="是否指派">
+                <el-select v-model="searchForm.isAssigned" placeholder="请选择" clearable>
+                  <el-option label="已指派" value="1"></el-option>
+                  <el-option label="未指派" value="0"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+                <el-button icon="el-icon-refresh" @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+
+          <!-- 操作按钮 -->
+          <div style="margin-bottom: 15px;">
+            <el-button type="success" icon="el-icon-download" size="small" @click="exportOrders">导出订单</el-button>
+          </div>
+
+          <!-- 表格数据 -->
+          <el-table :data="filteredList" style="width: 100%;" border stripe highlight-current-row
+            :header-cell-style="{backgroundColor: '#f5f7fa', color: '#606266', fontWeight: 'bold'}"
+            v-loading="tableLoading">
+            <template slot="empty">
+              <div style="padding: 30px 0; text-align: center;">
+                <i class="el-icon-s-order" style="font-size: 30px; color: #909399;"></i>
+                <p style="margin-top: 10px; color: #909399;">暂无数据</p>
+              </div>
+            </template>
+            <el-table-column prop="orderNo" label="订单编号" width="150" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="customerName" label="客户名称" width="100" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="contactPhone" label="联系方式" width="120" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="serviceName" label="所购服务" min-width="120" show-overflow-tooltip></el-table-column>
+            <el-table-column prop="amount" label="支付金额" width="100" align="center">
+              <template v-slot="{row}">
+                <span style="color: #ff6b6b; font-weight: bold;">¥{{ row.amount }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="支付方式" width="100" align="center">
+              <template v-slot="{row}">
+                <el-tag size="mini" effect="plain" type="success" v-if="row.paymentMethod === 'wechat'">
+                  <i class="el-icon-chat-dot-square"></i> 微信
+                </el-tag>
+                <el-tag size="mini" effect="plain" type="primary" v-else-if="row.paymentMethod === 'alipay'">
+                  <i class="el-icon-money"></i> 支付宝
+                </el-tag>
+                <el-tag size="mini" effect="plain" v-else>{{ getPaymentMethodText(row.paymentMethod) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="付款人" width="100" align="center">
+              <template v-slot="{row}">
+                <el-tag size="mini" effect="plain" :type="row.payerType === 'self' ? 'info' : 'warning'">
+                  {{ row.payerType === 'self' ? '自己付款' : '子女代付' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="服务机构" width="120" show-overflow-tooltip>
+              <template v-slot="{row}">
+                <span>{{ row.serviceProvider || '暂无' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="orderTime" label="下单时间" width="160" show-overflow-tooltip></el-table-column>
+            <el-table-column label="是否指派" width="90" align="center">
+              <template v-slot="{row}">
+                <el-tag :type="row.isAssigned === '1' ? 'success' : 'info'" size="mini">
+                  {{ row.isAssigned === '1' ? '已指派' : '未指派' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="订单状态" width="100" align="center">
+              <template v-slot="{row}">
+                <el-tag :type="getStatusType(row.status)" size="mini">
+                  {{ getStatusText(row.status) }}
+                </el-tag>
+                <div v-if="row.status === 'pending_payment'" style="margin-top: 5px; font-size: 12px; color: #f56c6c;">
+                  <i class="el-icon-time"></i> {{ row.remainingTime || '30:00' }}
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="180" align="center" fixed="right">
+              <template v-slot="{row}">
+                <el-button size="mini" type="primary" icon="el-icon-view" circle @click="viewDetail(row)" title="订单详情"></el-button>
+                <el-button size="mini" type="success" icon="el-icon-user" circle @click="assignStaff(row)" title="指派服务人员" :disabled="row.isAssigned === '1' || row.status === 'cancelled'"></el-button>
+                <el-button size="mini" type="danger" icon="el-icon-delete" circle @click="handleDelete(row)" title="删除" :disabled="row.status === 'processing'"></el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="pagination-container" style="margin-top: 20px; padding: 10px; background: #fff; border-radius: 4px;">
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+              :current-page="currentPage" :page-sizes="[5, 10, 20]" :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper" :total="filteredList.length" background
+              style="text-align: right;">
+            </el-pagination>
+          </div>
+
+          <!-- 订单表单弹窗 -->
+          <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="800px">
+            <el-form :model="form" :rules="formRules" ref="orderForm" label-width="120px" size="small">
+              <!-- 客户信息 -->
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-user"></i>
+                  <span>客户信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="客户名称" prop="customerName">
+                      <el-input v-model="form.customerName" placeholder="请输入客户名称"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="联系方式" prop="contactPhone">
+                      <el-input v-model="form.contactPhone" placeholder="请输入联系方式"></el-input>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="服务地址" prop="serviceAddress">
+                      <el-input v-model="form.serviceAddress" placeholder="请输入详细地址"></el-input>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+
+              <!-- 订单信息 -->
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-s-order"></i>
+                  <span>订单信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="所购服务" prop="serviceId">
+                      <el-select v-model="form.serviceId" placeholder="请选择服务" style="width: 100%;" @change="handleServiceChange">
+                        <el-option v-for="item in serviceOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="支付金额" prop="amount">
+                      <el-input-number v-model="form.amount" :min="0" :precision="2" :step="10" style="width: 100%"></el-input-number>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="附加费用" prop="additionalFee">
+                      <el-input-number v-model="form.additionalFee" :min="0" :precision="2" :step="10" style="width: 100%"></el-input-number>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="支付方式" prop="paymentMethod">
+                      <el-select v-model="form.paymentMethod" placeholder="请选择支付方式" style="width: 100%;">
+                        <el-option label="微信支付" value="wechat"></el-option>
+                        <el-option label="支付宝" value="alipay"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="付款人类型" prop="payerType">
+                      <el-select v-model="form.payerType" placeholder="请选择付款人类型" style="width: 100%;">
+                        <el-option label="自己付款" value="self"></el-option>
+                        <el-option label="子女代付" value="children"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24" v-if="form.payerType === 'children'">
+                    <el-divider content-position="left">代付人信息</el-divider>
+                    <el-row :gutter="20">
+                      <el-col :span="8">
+                        <el-form-item label="代付人姓名" prop="payerName">
+                          <el-input v-model="form.payerName" placeholder="请输入代付人姓名"></el-input>
+                        </el-form-item>
+                      </el-col>
+                      <el-col :span="8">
+                        <el-form-item label="代付人电话" prop="payerPhone">
+                          <el-input v-model="form.payerPhone" placeholder="请输入代付人电话"></el-input>
+                        </el-form-item>
+                      </el-col>
+                      <el-col :span="8">
+                        <el-form-item label="与老人关系" prop="payerRelation">
+                          <el-select v-model="form.payerRelation" placeholder="请选择关系" style="width: 100%;">
+                            <el-option label="子" value="son"></el-option>
+                            <el-option label="女" value="daughter"></el-option>
+                            <el-option label="其他亲属" value="other"></el-option>
+                          </el-select>
+                        </el-form-item>
+                      </el-col>
+                    </el-row>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="订单状态" prop="status">
+                      <el-select v-model="form.status" placeholder="请选择订单状态" style="width: 100%;">
+                        <el-option label="待支付" value="pending_payment"></el-option>
+                        <el-option label="待服务" value="pending_service"></el-option>
+                        <el-option label="服务中" value="processing"></el-option>
+                        <el-option label="已完成" value="completed"></el-option>
+                        <el-option label="已取消" value="cancelled"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="24">
+                    <el-form-item label="备注">
+                      <el-input type="textarea" v-model="form.remark" rows="3" placeholder="请输入备注信息"></el-input>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+
+              <!-- 服务记录 -->
+              <div class="form-section" v-if="dialogMode === 'edit'">
+                <div class="section-header">
+                  <i class="el-icon-picture"></i>
+                  <span>服务记录</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <el-form-item label="服务前照片">
+                      <el-upload action="#" list-type="picture-card" :auto-upload="false" :file-list="form.beforeImages">
+                        <i class="el-icon-plus"></i>
+                      </el-upload>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form-item label="服务后照片">
+                      <el-upload action="#" list-type="picture-card" :auto-upload="false" :file-list="form.afterImages">
+                        <i class="el-icon-plus"></i>
+                      </el-upload>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-form>
+            <div slot="footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="submitForm">保存</el-button>
+            </div>
+          </el-dialog>
+
+          <!-- 订单详情弹窗 -->
+          <el-dialog title="订单详情" :visible.sync="detailVisible" width="800px">
+            <div v-if="currentDetail">
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-s-order"></i>
+                  <span>订单信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="订单编号">{{ currentDetail.orderNo }}</el-descriptions-item>
+                  <el-descriptions-item label="订单状态">
+                    <el-tag :type="getStatusType(currentDetail.status)">{{ getStatusText(currentDetail.status) }}</el-tag>
+                    <div v-if="currentDetail.status === 'pending_payment'" style="margin-top: 5px; font-size: 12px; color: #f56c6c;">
+                      <i class="el-icon-time"></i> 支付倒计时: {{ currentDetail.remainingTime || '30:00' }}
+                    </div>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="下单时间">{{ currentDetail.orderTime }}</el-descriptions-item>
+                  <el-descriptions-item label="支付时间">{{ currentDetail.payTime || '未支付' }}</el-descriptions-item>
+                  <el-descriptions-item label="支付金额">¥{{ currentDetail.amount }}</el-descriptions-item>
+                  <el-descriptions-item label="附加费用">¥{{ currentDetail.additionalFee || '0.00' }}</el-descriptions-item>
+                  <el-descriptions-item label="附加费用说明">{{ currentDetail.additionalFeeDesc || '无' }}</el-descriptions-item>
+                  <el-descriptions-item label="支付方式">
+                    <el-tag size="small" effect="plain" type="success" v-if="currentDetail.paymentMethod === 'wechat'">
+                      <i class="el-icon-chat-dot-square"></i> 微信支付
+                    </el-tag>
+                    <el-tag size="small" effect="plain" type="primary" v-else-if="currentDetail.paymentMethod === 'alipay'">
+                      <i class="el-icon-money"></i> 支付宝
+                    </el-tag>
+                    <span v-else>{{ getPaymentMethodText(currentDetail.paymentMethod) }}</span>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="付款人类型">
+                    <el-tag size="small" effect="plain" :type="currentDetail.payerType === 'self' ? 'info' : 'warning'">
+                      {{ currentDetail.payerType === 'self' ? '自己付款' : '子女代付' }}
+                    </el-tag>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+              
+              <!-- 代付人信息 -->
+              <div class="form-section" v-if="currentDetail.payerType === 'children'">
+                <div class="section-header">
+                  <i class="el-icon-user"></i>
+                  <span>代付人信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="代付人姓名">{{ currentDetail.payerName || '未填写' }}</el-descriptions-item>
+                  <el-descriptions-item label="代付人联系方式">{{ currentDetail.payerPhone || '未填写' }}</el-descriptions-item>
+                  <el-descriptions-item label="与老人关系">{{ currentDetail.payerRelation === 'son' ? '子' : currentDetail.payerRelation === 'daughter' ? '女' : '其他亲属' }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-user"></i>
+                  <span>客户信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="客户名称">{{ currentDetail.customerName }}</el-descriptions-item>
+                  <el-descriptions-item label="联系方式">{{ currentDetail.contactPhone }}</el-descriptions-item>
+                  <el-descriptions-item label="服务地址" :span="2">{{ currentDetail.serviceAddress }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-s-grid"></i>
+                  <span>服务信息</span>
+                </div>
+                <el-divider></el-divider>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="所购服务">{{ currentDetail.serviceName }}</el-descriptions-item>
+                  <el-descriptions-item label="服务机构">{{ currentDetail.serviceProvider || '暂无' }}</el-descriptions-item>
+                  <el-descriptions-item label="是否指派">
+                    <el-tag :type="currentDetail.isAssigned === '1' ? 'success' : 'info'">
+                      {{ currentDetail.isAssigned === '1' ? '已指派' : '未指派' }}
+                    </el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="服务人员" v-if="currentDetail.isAssigned === '1'">
+                    {{ currentDetail.staffName }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="联系方式" v-if="currentDetail.isAssigned === '1'">
+                    {{ currentDetail.staffPhone }}
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+              
+              <!-- 订单进度信息 -->
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-time"></i>
+                  <span>订单进度</span>
+                </div>
+                <el-divider></el-divider>
+                <el-steps :active="getProgressStep(currentDetail.status)" finish-status="success" align-center>
+                  <el-step title="下单" :description="currentDetail.orderTime"></el-step>
+                  <el-step title="支付" :description="currentDetail.payTime || '未支付'"></el-step>
+                  <el-step title="服务中" :description="currentDetail.serviceStartTime || '未开始'"></el-step>
+                  <el-step title="完成" :description="currentDetail.serviceEndTime || '未完成'"></el-step>
+                </el-steps>
+              </div>
+
+              <div class="form-section" v-if="currentDetail.beforeImages && currentDetail.beforeImages.length > 0 || currentDetail.afterImages && currentDetail.afterImages.length > 0">
+                <div class="section-header">
+                  <i class="el-icon-picture"></i>
+                  <span>服务记录</span>
+                </div>
+                <el-divider></el-divider>
+                <el-row :gutter="20">
+                  <el-col :span="12" v-if="currentDetail.beforeImages && currentDetail.beforeImages.length > 0">
+                    <h4>服务前照片</h4>
+                    <div class="image-preview">
+                      <div class="image-item" v-for="(image, index) in currentDetail.beforeImages" :key="'before-'+index">
+                        <img :src="image.url" class="service-image" @click="previewImage(image.url)">
+                      </div>
+                    </div>
+                  </el-col>
+                  <el-col :span="12" v-if="currentDetail.afterImages && currentDetail.afterImages.length > 0">
+                    <h4>服务后照片</h4>
+                    <div class="image-preview">
+                      <div class="image-item" v-for="(image, index) in currentDetail.afterImages" :key="'after-'+index">
+                        <img :src="image.url" class="service-image" @click="previewImage(image.url)">
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">
+                  <i class="el-icon-document"></i>
+                  <span>备注信息</span>
+                </div>
+                <el-divider></el-divider>
+                <div style="padding: 10px;">
+                  {{ currentDetail.remark || '暂无备注信息' }}
+                </div>
+              </div>
+            </div>
+            <div slot="footer">
+              <el-button @click="detailVisible = false">关闭</el-button>
+              <el-button type="primary" @click="openDialog('edit', currentDetail)" v-if="currentDetail && currentDetail.status !== 'cancelled'">编辑订单</el-button>
+            </div>
+          </el-dialog>
+
+          <!-- 指派服务人员弹窗 -->
+          <el-dialog title="指派服务人员" :visible.sync="assignDialogVisible" width="1000px">
+            <div v-if="currentOrder" style="margin-bottom: 15px;">
+              <div style="font-weight: bold; margin-bottom: 10px;">当前订单：{{ currentOrder.orderNo }}</div>
+              <el-alert title="请选择合适的服务人员进行指派" type="info" :closable="false">
+              </el-alert>
+              <div style="margin-top: 10px; padding: 10px; background-color: #f5f7fa; border-radius: 4px;">
+                <div><b>订单服务类型：</b>{{ getServiceType(currentOrder.serviceId) }}</div>
+                <div style="margin-top: 5px;"><b>服务地址：</b>{{ currentOrder.serviceAddress }}</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+              <el-input placeholder="搜索服务人员" v-model="staffSearchKeyword" prefix-icon="el-icon-search" clearable
+                style="width: 250px;">
+              </el-input>
+              <div>
+                <span style="margin-right: 10px;">已选择：</span>
+                <el-tag v-if="selectedStaff" type="success">
+                  {{ selectedStaff.name }} ({{ selectedStaff.phone }})
+                </el-tag>
+                <span v-else style="color: #909399;">未选择</span>
+              </div>
+            </div>
+
+            <el-table :data="filteredServiceTypeStaffList" style="width: 100%;" border v-loading="staffTableLoading"
+              highlight-current-row @current-change="handleStaffSelect">
+              <el-table-column prop="name" label="姓名" width="100"></el-table-column>
+              <el-table-column prop="age" label="年龄" width="70" align="center"></el-table-column>
+              <el-table-column label="服务类型" min-width="120">
+                <template v-slot="{row}">
+                  <el-tag v-for="(type, index) in row.serviceTypes" :key="index" size="mini" effect="plain"
+                    :type="isMatchServiceType(type, currentOrder) ? 'success' : 'info'"
+                    style="margin-right: 4px; margin-bottom: 4px;">
+                    {{ getTypeLabel(type) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="workYears" label="从业年限" width="90" align="center"></el-table-column>
+              <el-table-column prop="phone" label="联系方式" width="120"></el-table-column>
+              <el-table-column label="状态" width="90" align="center">
+                <template v-slot="{row}">
+                  <el-tag :type="row.status === '1' ? 'success' : 'info'" size="mini">
+                    {{ row.status === '1' ? '可分配' : '不可分配' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" align="center">
+                <template v-slot="{row}">
+                  <el-button size="mini" type="primary" @click="selectStaff(row)" :disabled="row.status !== '1'">
+                    选择
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div slot="footer">
+              <el-button @click="assignDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmAssign" :disabled="!selectedStaff">确认指派</el-button>
+            </div>
+          </el-dialog>
+
+          <!-- 图片预览弹窗 -->
+          <el-dialog :visible.sync="previewVisible" append-to-body>
+            <img width="100%" :src="previewUrl" alt="预览图片">
+          </el-dialog>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          activePage: 'order',
+          currentPage: 1,
+          pageSize: 10,
+          searchForm: {
+            orderNo: '',
+            customerName: '',
+            contactPhone: '',
+            status: '',
+            orderTimeRange: [],
+            isAssigned: ''
+          },
+          tableLoading: false,
+          dialogVisible: false,
+          dialogTitle: '',
+          dialogMode: 'add',
+          detailVisible: false,
+          currentDetail: null,
+          assignDialogVisible: false,
+          currentOrder: null,
+          staffSearchKeyword: '',
+          staffTableLoading: false,
+          selectedStaff: null,
+          previewVisible: false,
+          previewUrl: '',
+          form: {
+            id: null,
+            orderNo: '',
+            customerName: '',
+            contactPhone: '',
+            serviceAddress: '',
+            serviceId: '',
+            serviceName: '',
+            amount: 0,
+            additionalFee: 0,
+            additionalFeeDesc: '',
+            paymentMethod: 'wechat',
+            payerType: 'self',
+            payerName: '',
+            payerPhone: '',
+            payerRelation: '',
+            orderTime: '',
+            payTime: '',
+            status: 'pending_payment',
+            isAssigned: '0',
+            staffId: '',
+            staffName: '',
+            staffPhone: '',
+            serviceProvider: '',
+            remainingTime: '30:00',
+            serviceStartTime: '',
+            serviceEndTime: '',
+            remark: '',
+            beforeImages: [],
+            afterImages: []
+          },
+          formRules: {
+            customerName: [
+              { required: true, message: '请输入客户名称', trigger: 'blur' }
+            ],
+            contactPhone: [
+              { required: true, message: '请输入联系方式', trigger: 'blur' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+            ],
+            serviceAddress: [
+              { required: true, message: '请输入服务地址', trigger: 'blur' }
+            ],
+            serviceId: [
+              { required: true, message: '请选择服务', trigger: 'change' }
+            ],
+            amount: [
+              { required: true, message: '请输入支付金额', trigger: 'blur' }
+            ],
+            paymentMethod: [
+              { required: true, message: '请选择支付方式', trigger: 'change' }
+            ],
+            paymentType: [
+              { required: true, message: '请选择支付类型', trigger: 'change' }
+            ],
+            status: [
+              { required: true, message: '请选择订单状态', trigger: 'change' }
+            ]
+          },
+          serviceOptions: [
+            { id: 1, name: '上门四菜一汤', price: 120 },
+            { id: 2, name: '马桶疏通服务', price: 80 },
+            { id: 3, name: '居家清洁服务', price: 150 },
+            { id: 4, name: '陪同就医服务', price: 200 },
+            { id: 5, name: '康复护理服务', price: 180 },
+            { id: 6, name: '健康管理服务', price: 300 }
+          ],
+          orderList: [
+            {
+              id: 1,
+              orderNo: 'DD202305150001',
+              customerName: '张三',
+              contactPhone: '13800138001',
+              serviceAddress: '北京市朝阳区建国路88号',
+              serviceId: 1,
+              serviceName: '上门四菜一汤',
+              amount: 120,
+              additionalFee: 20,
+              additionalFeeDesc: '远程服务费',
+              paymentMethod: 'wechat',
+              payerType: 'self',
+              orderTime: '2023-05-15 10:30:00',
+              payTime: '2023-05-15 10:35:22',
+              status: 'completed',
+              isAssigned: '1',
+              staffId: 1,
+              staffName: '李护工',
+              staffPhone: '13900139001',
+              serviceProvider: '北京家政服务有限公司',
+              serviceStartTime: '2023-05-15 14:00:00',
+              serviceEndTime: '2023-05-15 16:30:00',
+              remark: '客户要求准时到达',
+              beforeImages: [
+                { name: '服务前1.jpg', url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg' },
+                { name: '服务前2.jpg', url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg' }
+              ],
+              afterImages: [
+                { name: '服务后1.jpg', url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg' },
+                { name: '服务后2.jpg', url: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg' }
+              ]
+            },
+            {
+              id: 2,
+              orderNo: 'DD202305160002',
+              customerName: '李四',
+              contactPhone: '13800138002',
+              serviceAddress: '北京市海淀区中关村大街1号',
+              serviceId: 2,
+              serviceName: '马桶疏通服务',
+              amount: 80,
+              additionalFee: 0,
+              additionalFeeDesc: '',
+              paymentMethod: 'alipay',
+              payerType: 'self',
+              orderTime: '2023-05-16 14:20:00',
+              payTime: '2023-05-16 14:22:35',
+              status: 'processing',
+              isAssigned: '1',
+              staffId: 2,
+              staffName: '王维修',
+              staffPhone: '13900139002',
+              serviceProvider: '北京家政维修服务中心',
+              serviceStartTime: '2023-05-16 15:00:00',
+              serviceEndTime: '',
+              remark: '客户反映马桶堵塞严重'
+            },
+            {
+              id: 3,
+              orderNo: 'DD202305170003',
+              customerName: '王五',
+              contactPhone: '13800138003',
+              serviceAddress: '北京市西城区西长安街100号',
+              serviceId: 3,
+              serviceName: '居家清洁服务',
+              amount: 150,
+              additionalFee: 30,
+              additionalFeeDesc: '特殊清洁用品费用',
+              paymentMethod: 'wechat',
+              payerType: 'children',
+              payerName: '王小明',
+              payerPhone: '13900139008',
+              payerRelation: 'son',
+              orderTime: '2023-05-17 09:15:00',
+              payTime: '',
+              status: 'pending_payment',
+              isAssigned: '0',
+              serviceProvider: '北京洁净家政服务有限公司',
+              remainingTime: '25:30',
+              remark: '客户要求带专业清洁设备'
+            },
+            {
+              id: 4,
+              orderNo: 'DD202305180004',
+              customerName: '赵六',
+              contactPhone: '13800138004',
+              serviceAddress: '北京市东城区东长安街9号',
+              serviceId: 4,
+              serviceName: '陪同就医服务',
+              amount: 200,
+              additionalFee: 50,
+              additionalFeeDesc: '轮椅租赁费用',
+              paymentMethod: 'wechat',
+              payerType: 'children',
+              payerName: '赵小红',
+              payerPhone: '13900139009',
+              payerRelation: 'daughter',
+              orderTime: '2023-05-18 08:00:00',
+              payTime: '2023-05-18 08:05:42',
+              status: 'pending_service',
+              isAssigned: '0',
+              serviceProvider: '北京关爱老人服务中心',
+              remark: '客户行动不便，需要轮椅'
+            },
+            {
+              id: 5,
+              orderNo: 'DD202305190005',
+              customerName: '孙七',
+              contactPhone: '13800138005',
+              serviceAddress: '北京市丰台区丰台路20号',
+              serviceId: 5,
+              serviceName: '康复护理服务',
+              amount: 180,
+              additionalFee: 0,
+              additionalFeeDesc: '',
+              paymentMethod: 'alipay',
+              payerType: 'self',
+              orderTime: '2023-05-19 16:30:00',
+              payTime: '2023-05-19 16:35:18',
+              status: 'cancelled',
+              isAssigned: '0',
+              serviceProvider: '北京康复医疗服务中心',
+              remark: '客户临时取消服务'
+            }
+          ],
+          staffList: [
+            {
+              id: 1,
+              name: '李护工',
+              age: 35,
+              serviceTypes: ['smzf', 'rcqj'],
+              phone: '13900139001',
+              workYears: 5,
+              status: '1'
+            },
+            {
+              id: 2,
+              name: '王维修',
+              age: 40,
+              serviceTypes: ['smwx', 'rcqj'],
+              phone: '13900139002',
+              workYears: 8,
+              status: '1'
+            },
+            {
+              id: 3,
+              name: '张医生',
+              age: 45,
+              serviceTypes: ['khhl', 'jkgl', 'ptjy'],
+              phone: '13900139003',
+              workYears: 10,
+              status: '1'
+            },
+            {
+              id: 4,
+              name: '刘阿姨',
+              age: 50,
+              serviceTypes: ['shzl', 'smzf', 'rcqj'],
+              phone: '13900139004',
+              workYears: 12,
+              status: '1'
+            },
+            {
+              id: 5,
+              name: '赵护士',
+              age: 28,
+              serviceTypes: ['lchl', 'khhl', 'jkgl'],
+              phone: '13900139005',
+              workYears: 3,
+              status: '0'
+            }
+          ],
+          typeOptions: [
+            { dictValue: 'shzl', dictLabel: '生活照料' },
+            { dictValue: 'lchl', dictLabel: '临床护理' },
+            { dictValue: 'khhl', dictLabel: '康复护理' },
+            { dictValue: 'xlgh', dictLabel: '心理关怀' },
+            { dictValue: 'smzf', dictLabel: '上门做饭' },
+            { dictValue: 'jkgl', dictLabel: '健康管理' },
+            { dictValue: 'ptjy', dictLabel: '陪同就医' },
+            { dictValue: 'rcqj', dictLabel: '日常清洁' },
+            { dictValue: 'smwx', dictLabel: '上门维修' },
+            { dictValue: 'yyxz', dictLabel: '预约巡诊' }
+          ]
+        }
+      },
+      computed: {
+        dialogTitle() {
+          return this.dialogMode === 'add' ? '新增订单' : '编辑订单';
+        },
+        filteredList() {
+          let result = [...this.orderList];
+          
+          // 订单编号筛选
+          if (this.searchForm.orderNo) {
+            result = result.filter(item => item.orderNo.includes(this.searchForm.orderNo));
+          }
+          
+          // 客户名称筛选
+          if (this.searchForm.customerName) {
+            result = result.filter(item => item.customerName.includes(this.searchForm.customerName));
+          }
+          
+          // 联系方式筛选
+          if (this.searchForm.contactPhone) {
+            result = result.filter(item => item.contactPhone.includes(this.searchForm.contactPhone));
+          }
+          
+          // 订单状态筛选
+          if (this.searchForm.status) {
+            result = result.filter(item => item.status === this.searchForm.status);
+          }
+          
+          // 是否指派筛选
+          if (this.searchForm.isAssigned) {
+            result = result.filter(item => item.isAssigned === this.searchForm.isAssigned);
+          }
+          
+          // 下单时间范围筛选
+          if (this.searchForm.orderTimeRange && this.searchForm.orderTimeRange.length === 2) {
+            const startDate = this.searchForm.orderTimeRange[0];
+            const endDate = this.searchForm.orderTimeRange[1];
+            result = result.filter(item => {
+              const orderDate = item.orderTime.split(' ')[0];
+              return orderDate >= startDate && orderDate <= endDate;
+            });
+          }
+          
+          return result;
+        },
+        filteredStaffList() {
+          let result = [...this.staffList];
+          
+          if (this.staffSearchKeyword) {
+            result = result.filter(item => 
+              item.name.includes(this.staffSearchKeyword) || 
+              item.phone.includes(this.staffSearchKeyword)
+            );
+          }
+          
+          return result;
+        },
+        filteredServiceTypeStaffList() {
+          // 先按照关键字筛选
+          let result = this.filteredStaffList;
+          
+          // 如果有当前订单，优先展示匹配服务类型的人员
+          if (this.currentOrder && this.currentOrder.serviceId) {
+            // 按照是否匹配服务类型排序
+            result = [...result].sort((a, b) => {
+              const aMatch = a.serviceTypes.some(type => this.isMatchServiceType(type, this.currentOrder));
+              const bMatch = b.serviceTypes.some(type => this.isMatchServiceType(type, this.currentOrder));
+              
+              if (aMatch && !bMatch) return -1;
+              if (!aMatch && bMatch) return 1;
+              return 0;
+            });
+          }
+          
+          return result;
+        }
+      },
+      methods: {
+        handleMenu(index) {
+          switch (index) {
+            case '1':
+              window.location.href = 'index.html';
+              break;
+            case '2':
+              window.location.href = 'servicePage.html';
+              break;
+            case '3':
+              window.location.href = 'staffManagement.html';
+              break;
+            case '4':
+              window.location.href = 'elderlyInstitution.html';
+              break;
+            case '5':
+              window.location.href = 'serviceProvider.html';
+              break;
+            case '6':
+              this.activePage = 'order';
+              break;
+          }
+        },
+        handleSearch() {
+          this.currentPage = 1;
+        },
+        resetSearch() {
+          this.searchForm = {
+            orderNo: '',
+            customerName: '',
+            contactPhone: '',
+            status: '',
+            orderTimeRange: [],
+            isAssigned: ''
+          };
+        },
+        handleSizeChange(val) {
+          this.pageSize = val;
+        },
+        handleCurrentChange(val) {
+          this.currentPage = val;
+        },
+        openDialog(mode, row) {
+          this.dialogMode = mode;
+          if (mode === 'add') {
+            this.form = {
+              id: null,
+              orderNo: 'DD' + this.generateOrderNo(),
+              customerName: '',
+              contactPhone: '',
+              serviceAddress: '',
+              serviceId: '',
+              serviceName: '',
+              amount: 0,
+              additionalFee: 0,
+              paymentMethod: '',
+              paymentType: '',
+              orderTime: this.formatDateTime(new Date()),
+              payTime: '',
+              status: 'pending_payment',
+              isAssigned: '0',
+              staffId: '',
+              staffName: '',
+              staffPhone: '',
+              remark: '',
+              beforeImages: [],
+              afterImages: []
+            };
+          } else {
+            this.form = JSON.parse(JSON.stringify(row));
+          }
+          this.dialogVisible = true;
+          this.$nextTick(() => {
+            this.$refs.orderForm && this.$refs.orderForm.clearValidate();
+          });
+        },
+        submitForm() {
+          this.$refs.orderForm.validate(valid => {
+            if (valid) {
+              this.tableLoading = true;
+              setTimeout(() => {
+                if (this.dialogMode === 'add') {
+                  this.form.id = this.orderList.length + 1;
+                  this.orderList.unshift(this.form);
+                  this.$message.success('新增订单成功');
+                } else {
+                  const index = this.orderList.findIndex(item => item.id === this.form.id);
+                  if (index !== -1) {
+                    this.orderList.splice(index, 1, this.form);
+                    this.$message.success('编辑订单成功');
+                  }
+                }
+                this.tableLoading = false;
+                this.dialogVisible = false;
+              }, 500);
+            }
+          });
+        },
+        handleDelete(row) {
+          this.$confirm('确认删除该订单吗?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.tableLoading = true;
+            setTimeout(() => {
+              const index = this.orderList.findIndex(item => item.id === row.id);
+              if (index !== -1) {
+                this.orderList.splice(index, 1);
+                this.$message.success('删除成功');
+              }
+              this.tableLoading = false;
+            }, 500);
+          }).catch(() => {});
+        },
+        viewDetail(row) {
+          this.currentDetail = JSON.parse(JSON.stringify(row));
+          this.detailVisible = true;
+        },
+        assignStaff(row) {
+          this.currentOrder = row;
+          this.selectedStaff = null;
+          this.staffSearchKeyword = '';
+          this.assignDialogVisible = true;
+        },
+        selectStaff(staff) {
+          this.selectedStaff = staff;
+        },
+        confirmAssign() {
+          if (!this.selectedStaff) {
+            this.$message.warning('请选择服务人员');
+            return;
+          }
+          
+          this.staffTableLoading = true;
+          setTimeout(() => {
+            const index = this.orderList.findIndex(item => item.id === this.currentOrder.id);
+            if (index !== -1) {
+              this.orderList[index].isAssigned = '1';
+              this.orderList[index].staffId = this.selectedStaff.id;
+              this.orderList[index].staffName = this.selectedStaff.name;
+              this.orderList[index].staffPhone = this.selectedStaff.phone;
+              
+              if (this.orderList[index].status === 'pending_service') {
+                this.orderList[index].status = 'processing';
+              }
+              
+              this.$message.success(`已成功指派 ${this.selectedStaff.name} 为该订单服务人员`);
+            }
+            this.staffTableLoading = false;
+            this.assignDialogVisible = false;
+          }, 500);
+        },
+        handleServiceChange(serviceId) {
+          const service = this.serviceOptions.find(item => item.id === serviceId);
+          if (service) {
+            this.form.serviceName = service.name;
+            this.form.amount = service.price;
+          }
+        },
+        exportOrders() {
+          this.$message.success('订单数据导出成功');
+        },
+        previewImage(url) {
+          this.previewUrl = url;
+          this.previewVisible = true;
+        },
+        getStatusType(status) {
+          switch (status) {
+            case 'pending_payment':
+              return 'warning';
+            case 'pending_service':
+              return 'info';
+            case 'processing':
+              return 'primary';
+            case 'completed':
+              return 'success';
+            case 'cancelled':
+              return 'danger';
+            default:
+              return 'info';
+          }
+        },
+        getStatusText(status) {
+          switch (status) {
+            case 'pending_payment':
+              return '待支付';
+            case 'pending_service':
+              return '待服务';
+            case 'processing':
+              return '服务中';
+            case 'completed':
+              return '已完成';
+            case 'cancelled':
+              return '已取消';
+            default:
+              return '未知';
+          }
+        },
+        getPaymentMethodText(method) {
+          switch (method) {
+            case 'wechat':
+              return '微信支付';
+            case 'alipay':
+              return '支付宝';
+            case 'bank':
+              return '银行卡';
+            case 'cash':
+              return '现金';
+            default:
+              return '未知';
+          }
+        },
+        getPaymentTypeText(type) {
+          switch (type) {
+            case 'one_time':
+              return '一次性付款';
+            case 'installment':
+              return '分期付款';
+            case 'monthly':
+              return '月付';
+            default:
+              return '未知';
+          }
+        },
+        getProgressStep(status) {
+          switch (status) {
+            case 'pending_payment':
+              return 0;
+            case 'pending_service':
+              return 1;
+            case 'processing':
+              return 2;
+            case 'completed':
+              return 3;
+            case 'cancelled':
+              return 0;
+            default:
+              return 0;
+          }
+        },
+        getServiceType(serviceId) {
+          const service = this.serviceOptions.find(item => item.id === serviceId);
+          return service ? service.name : '未知服务';
+        },
+        isMatchServiceType(staffType, order) {
+          // 根据订单服务类型匹配服务人员技能
+          if (!order || !order.serviceId) return false;
+          
+          // 服务ID与服务类型的映射关系
+          const serviceTypeMap = {
+            1: 'smzf', // 上门四菜一汤 -> 上门做饭
+            2: 'smwx', // 马桶疏通服务 -> 上门维修
+            3: 'rcqj', // 居家清洁服务 -> 日常清洁
+            4: 'ptjy', // 陪同就医服务 -> 陪同就医
+            5: 'khhl', // 康复护理服务 -> 康复护理
+            6: 'jkgl'  // 健康管理服务 -> 健康管理
+          };
+          
+          const requiredType = serviceTypeMap[order.serviceId];
+          return staffType === requiredType;
+        },
+        handleStaffSelect(staff) {
+          if (staff && staff.status === '1') {
+            this.selectedStaff = staff;
+          }
+        },
+        getTypeLabel(value) {
+          const option = this.typeOptions.find(item => item.dictValue === value);
+          return option ? option.dictLabel : value;
+        },
+        generateOrderNo() {
+          const date = new Date();
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+          return `${year}${month}${day}${random}`;
+        },
+        formatDateTime(date) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const seconds = String(date.getSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

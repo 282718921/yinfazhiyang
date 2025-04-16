@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', Arial, sans-serif;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #304156;
+            color: white;
+        }
+
+        .sidebar .logo {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #263445;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 60px;
+            line-height: 60px;
+            padding-left: 20px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            padding: 20px;
+            background-color: #f0f2f5;
+            flex: 1;
+            overflow: auto;
+        }
+
+        /* 表格样式优化 */
+        .el-table {
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .el-table th {
+            background-color: #f5f7fa !important;
+            color: #606266;
+            font-weight: bold;
+        }
+
+        .el-table--striped .el-table__body tr.el-table__row--striped td {
+            background-color: #fafafa;
+        }
+
+        /* 搜索表单样式 */
+        .search-form .el-card__header {
+            padding: 12px 20px;
+            background-color: #f5f7fa;
+        }
+
+        /* 按钮样式优化 */
+        .el-button--primary {
+            background-color: #409EFF;
+            border-color: #409EFF;
+        }
+
+        .el-button--primary:hover {
+            background-color: #66b1ff;
+            border-color: #66b1ff;
+        }
+
+        /* 分页样式 */
+        .pagination-container {
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表单分区样式 */
+        .form-section {
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 15px 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #303133;
+            margin-bottom: 5px;
+        }
+
+        .section-header i {
+            margin-right: 8px;
+            color: #409EFF;
+        }
+
+        .el-divider {
+            margin: 12px 0 20px;
+        }
+
+        /* 图片上传样式 */
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .image-item {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .image-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ebeef5;
+        }
+
+        .image-item .delete-icon {
+            position: absolute;
+            right: -6px;
+            top: -6px;
+            color: #f56c6c;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 评分样式 */
+        .rating-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff9900;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">管理系统</div>
+            <el-menu default-active="4" @select="handleMenu" background-color="#304156" text-color="#bfcbd9"
+                active-text-color="#409EFF">
+                <el-menu-item index="1">
+                    <i class="el-icon-s-home"></i>
+                    <span slot="title">首页</span>
+                </el-menu-item>
+                <el-menu-item index="2">
+                    <i class="el-icon-s-grid"></i>
+                    <span slot="title">服务管理</span>
+                </el-menu-item>
+                <el-menu-item index="3">
+                    <i class="el-icon-user"></i>
+                    <span slot="title">服务人员管理</span>
+                </el-menu-item>
+                <el-menu-item index="4">
+                    <i class="el-icon-office-building"></i>
+                    <span slot="title">养老机构管理</span>
+                </el-menu-item>
+                <el-menu-item index="5">
+                    <i class="el-icon-s-shop"></i>
+                    <span slot="title">服务商管理</span>
+                </el-menu-item>
+                <el-menu-item index="6">
+                    <i class="el-icon-s-order"></i>
+                    <span slot="title">订单管理</span>
+                </el-menu-item>
+            </el-menu>
+        </div>
+
+        <!-- 主区域 -->
+        <div class="main">
+            <div class="header">后台管理系统</div>
+            <div class="content">
+                <!-- 养老机构管理 -->
+                <div v-if="activePage === 'institution'">
+                    <!-- 搜索区域 -->
+                    <el-card class="search-form" style="margin-bottom: 20px;">
+                        <div slot="header" style="font-weight: bold;"><i class="el-icon-search"
+                                style="margin-right: 5px;"></i>搜索条件</div>
+                        <el-form :inline="true" :model="searchForm" size="small">
+                            <el-form-item label="机构名称">
+                                <el-input v-model="searchForm.name" placeholder="请输入机构名称" clearable></el-input>
+                            </el-form-item>
+                            <el-form-item label="所在区域">
+                                <el-cascader v-model="searchForm.region" :options="regionOptions" placeholder="请选择所在区域"
+                                    clearable style="width: 220px;">
+                                </el-cascader>
+                            </el-form-item>
+                            <el-form-item label="营业状态">
+                                <el-select v-model="searchForm.operationStatus" placeholder="请选择状态" clearable>
+                                    <el-option label="正常营业" value="1"></el-option>
+                                    <el-option label="暂停营业" value="2"></el-option>
+                                    <el-option label="即将开业" value="3"></el-option>
+                                    <el-option label="已关闭" value="0"></el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+                                <el-button icon="el-icon-refresh" @click="resetSearch">重置</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </el-card>
+
+                    <!-- 操作按钮 -->
+                    <div style="margin-bottom: 15px;">
+                        <el-button type="primary" icon="el-icon-plus" size="small"
+                            @click="openDialog('add')">新增机构</el-button>
+                    </div>
+
+                    <!-- 表格数据 -->
+                    <el-table :data="filteredList" style="width: 100%;" border stripe highlight-current-row
+                        :header-cell-style="{backgroundColor: '#f5f7fa', color: '#606266', fontWeight: 'bold'}"
+                        v-loading="tableLoading">
+                        <template slot="empty">
+                            <div style="padding: 30px 0; text-align: center;">
+                                <i class="el-icon-search" style="font-size: 30px; color: #909399;"></i>
+                                <p style="margin-top: 10px; color: #909399;">暂无数据</p>
+                            </div>
+                        </template>
+                        <el-table-column prop="name" label="机构名称" min-width="120"
+                            show-overflow-tooltip></el-table-column>
+                        <el-table-column prop="regionText" label="所在区域" min-width="150"
+                            show-overflow-tooltip></el-table-column>
+                        <el-table-column prop="address" label="详细地址" min-width="180"
+                            show-overflow-tooltip></el-table-column>
+                        <el-table-column label="宣传标签" min-width="120">
+                            <template v-slot="{row}">
+                                <el-tag v-for="(tag, index) in row.tags" :key="index" size="mini" effect="plain"
+                                    style="margin-right: 4px; margin-bottom: 4px;">
+                                    {{ tag }}
+                                </el-tag>
+                                <span v-if="!row.tags || row.tags.length === 0"
+                                    style="color: #909399; font-size: 12px;">暂无标签</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="营业状态" width="100" align="center">
+                            <template v-slot="{row}">
+                                <el-tag :type="getStatusType(row.operationStatus)" size="mini">
+                                    {{ getStatusText(row.operationStatus) }}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="currentResidents" label="现入住人数" width="100" align="center">
+                            <template v-slot="{row}">
+                                <span style="font-weight: bold;">{{ row.currentResidents || 0 }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="totalResidents" label="累积入住人数" width="120" align="center">
+                            <template v-slot="{row}">
+                                <span style="font-weight: bold;">{{ row.totalResidents || 0 }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="评分" width="100" align="center">
+                            <template v-slot="{row}">
+                                <div>
+                                    <span class="rating-value">{{ row.rating || '0.0' }}</span>
+                                    <div>
+                                        <el-rate v-model="row.rating" disabled text-color="#ff9900"
+                                            score-template="{value}">
+                                        </el-rate>
+                                    </div>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="180" align="center" fixed="right">
+                            <template v-slot="{row}">
+                                <el-button size="mini" type="primary" icon="el-icon-edit" circle
+                                    @click="openDialog('edit', row)" title="编辑"></el-button>
+                                <el-button size="mini" type="success" icon="el-icon-view" circle
+                                    @click="viewDetail(row)" title="查看详情"></el-button>
+                                <el-button size="mini" type="danger" icon="el-icon-delete" circle
+                                    @click="handleDelete(row)" title="删除"></el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+
+                    <!-- 分页 -->
+                    <div class="pagination-container"
+                        style="margin-top: 20px; padding: 10px; background: #fff; border-radius: 4px;">
+                        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                            :current-page="currentPage" :page-sizes="[5, 10, 20]" :page-size="pageSize"
+                            layout="total, sizes, prev, pager, next, jumper" :total="filteredList.length" background
+                            style="text-align: right;">
+                        </el-pagination>
+                    </div>
+
+                    <!-- 弹窗表单 -->
+                    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="800px">
+                        <el-form :model="form" :rules="formRules" ref="institutionForm" label-width="120px"
+                            size="small">
+                            <!-- 基本信息 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <i class="el-icon-info"></i>
+                                    <span>基本信息</span>
+                                </div>
+                                <el-divider></el-divider>
+                                <el-row :gutter="20">
+                                    <el-col :span="12">
+                                        <el-form-item label="机构名称" prop="name">
+                                            <el-input v-model="form.name" placeholder="请输入机构名称"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="所在区域" prop="region">
+                                            <el-cascader v-model="form.region" :options="regionOptions"
+                                                placeholder="请选择所在区域" style="width: 100%;">
+                                            </el-cascader>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="详细地址" prop="address">
+                                            <el-input v-model="form.address" placeholder="请输入详细地址"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="负责人" prop="manager">
+                                            <el-input v-model="form.manager" placeholder="请输入负责人姓名"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="联系方式" prop="contactPhone">
+                                            <el-input v-model="form.contactPhone" placeholder="请输入联系电话"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="宣传标签">
+                                            <el-tag :key="tag" v-for="tag in form.tags" closable
+                                                :disable-transitions="false" @close="handleRemoveTag(tag)"
+                                                style="margin-right: 8px; margin-bottom: 8px;">
+                                                {{tag}}
+                                            </el-tag>
+                                            <el-input class="input-new-tag" v-if="inputTagVisible"
+                                                v-model="inputTagValue" ref="saveTagInput" size="small"
+                                                @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm"
+                                                style="width: 90px; margin-right: 8px; vertical-align: bottom;">
+                                            </el-input>
+                                            <el-button v-else class="button-new-tag" size="small"
+                                                @click="showInputTag">+ 添加标签</el-button>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+
+                            <!-- 营业信息 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <i class="el-icon-time"></i>
+                                    <span>营业信息</span>
+                                </div>
+                                <el-divider></el-divider>
+                                <el-row :gutter="20">
+                                    <el-col :span="12">
+                                        <el-form-item label="营业状态" prop="operationStatus">
+                                            <el-select v-model="form.operationStatus" placeholder="请选择营业状态"
+                                                style="width: 100%;">
+                                                <el-option label="正常营业" value="1"></el-option>
+                                                <el-option label="暂停营业" value="2"></el-option>
+                                                <el-option label="即将开业" value="3"></el-option>
+                                                <el-option label="已关闭" value="0"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="营业时间" prop="businessDays">
+                                            <div style="margin-bottom: 10px;">
+                                                <el-checkbox-group v-model="form.businessDays">
+                                                    <el-checkbox label="1">周一</el-checkbox>
+                                                    <el-checkbox label="2">周二</el-checkbox>
+                                                    <el-checkbox label="3">周三</el-checkbox>
+                                                    <el-checkbox label="4">周四</el-checkbox>
+                                                    <el-checkbox label="5">周五</el-checkbox>
+                                                    <el-checkbox label="6">周六</el-checkbox>
+                                                    <el-checkbox label="0">周日</el-checkbox>
+                                                </el-checkbox-group>
+                                            </div>
+                                            <el-time-picker v-model="form.businessHoursStart" placeholder="开始时间"
+                                                format="HH:mm" style="width: 120px; margin-right: 10px;">
+                                            </el-time-picker>
+                                            <span style="margin: 0 10px;">至</span>
+                                            <el-time-picker v-model="form.businessHoursEnd" placeholder="结束时间"
+                                                format="HH:mm" style="width: 120px;">
+                                            </el-time-picker>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+
+                            <!-- 入住信息 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <i class="el-icon-user"></i>
+                                    <span>入住信息</span>
+                                </div>
+                                <el-divider></el-divider>
+                                <el-row :gutter="20">
+                                    <el-col :span="12">
+                                        <el-form-item label="现入住人数" prop="currentResidents">
+                                            <el-input-number v-model="form.currentResidents" :min="0"
+                                                style="width: 100%"></el-input-number>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="12">
+                                        <el-form-item label="累积入住人数" prop="totalResidents">
+                                            <el-input-number v-model="form.totalResidents" :min="0"
+                                                style="width: 100%"></el-input-number>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="入住须知" prop="admissionNotice">
+                                            <el-input type="textarea" v-model="form.admissionNotice" rows="4"
+                                                placeholder="请输入入住须知"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="机构服务摘要" prop="serviceSummary">
+                                            <el-input type="textarea" v-model="form.serviceSummary" rows="4"
+                                                placeholder="请输入机构服务摘要"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+
+                            <!-- 宣传信息 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <i class="el-icon-picture"></i>
+                                    <span>宣传信息</span>
+                                </div>
+                                <el-divider></el-divider>
+                                <el-row :gutter="20">
+                                    <el-col :span="24">
+                                        <el-form-item label="宣传图片">
+                                            <el-upload action="#" list-type="picture-card" :auto-upload="false"
+                                                :file-list="form.promotionImages">
+                                                <i class="el-icon-plus"></i>
+                                                <div slot="tip" class="el-upload__tip">用于APP列表展示的首图</div>
+                                            </el-upload>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :span="24">
+                                        <el-form-item label="院区环境">
+                                            <el-upload action="#" list-type="picture-card" :auto-upload="false"
+                                                :file-list="form.environmentImages" multiple>
+                                                <i class="el-icon-plus"></i>
+                                                <div slot="tip" class="el-upload__tip">展示院区环境的多张图片</div>
+                                            </el-upload>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                        </el-form>
+                        <div slot="footer">
+                            <el-button @click="dialogVisible = false">取消</el-button>
+                            <el-button type="primary" @click="submitForm">保存</el-button>
+                        </div>
+                    </el-dialog>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    activePage: 'institution',
+
+                    currentPage: 1,
+                    pageSize: 10,
+                    searchForm: {
+                        name: '',
+                        region: [],
+                        operationStatus: ''
+                    },
+                    tableLoading: false,
+                    dialogVisible: false,
+                    dialogTitle: '',
+                    inputTagVisible: false,
+                    inputTagValue: '',
+
+                    form: {
+                        id: null,
+                        name: '',
+                        region: [],
+                        address: '',
+                        manager: '',
+                        contactPhone: '',
+                        tags: [],
+                        operationStatus: '1',
+                        businessDays: ['1', '2', '3', '4', '5'],
+                        businessHoursStart: new Date(2000, 0, 1, 8, 0),
+                        businessHoursEnd: new Date(2000, 0, 1, 18, 0),
+                        currentResidents: 0,
+                        totalResidents: 0,
+                        admissionNotice: '',
+                        serviceSummary: '',
+                        promotionImages: [],
+                        environmentImages: [],
+                        rating: 0
+                    },
+                    formRules: {
+                        name: [
+                            { required: true, message: '请输入机构名称', trigger: 'blur' },
+                            { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+                        ],
+                        region: [
+                            { required: true, message: '请选择所在区域', trigger: 'change' }
+                        ],
+                        address: [
+                            { required: true, message: '请输入详细地址', trigger: 'blur' }
+                        ],
+                        manager: [
+                            { required: true, message: '请输入负责人姓名', trigger: 'blur' }
+                        ],
+                        contactPhone: [
+                            { required: true, message: '请输入联系方式', trigger: 'blur' },
+                            { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+                        ],
+                        operationStatus: [
+                            { required: true, message: '请选择营业状态', trigger: 'change' }
+                        ],
+                        businessDays: [
+                            { type: 'array', required: true, message: '请选择营业日期', trigger: 'change' }
+                        ]
+                    },
+
+                    // 模拟数据
+                    institutionList: [
+                        {
+                            id: 1,
+                            name: '阳光老年公寓',
+                            region: ['110000', '110100', '110105'],
+                            regionText: '北京市 北京市 朝阳区',
+                            address: '朝阳区建国路88号',
+                            manager: '张明',
+                            contactPhone: '13800138000',
+                            tags: ['环境优美', '专业护理', '医养结合'],
+                            operationStatus: '1',
+                            businessDays: ['1', '2', '3', '4', '5', '6', '0'],
+                            businessHoursStart: new Date(2000, 0, 1, 8, 0),
+                            businessHoursEnd: new Date(2000, 0, 1, 20, 0),
+                            currentResidents: 120,
+                            totalResidents: 350,
+                            admissionNotice: '需提前预约参观，入住需提供身份证、健康证明等相关材料',
+                            serviceSummary: '提供专业的养老护理服务，包括生活照料、康复护理、医疗保健等',
+                            promotionImages: [],
+                            environmentImages: [],
+                            rating: 4.8
+                        },
+                        {
+                            id: 2,
+                            name: '康乐养老中心',
+                            region: ['310000', '310100', '310115'],
+                            regionText: '上海市 上海市 浦东新区',
+                            address: '浦东新区张江高科技园区',
+                            manager: '李华',
+                            contactPhone: '13900139000',
+                            tags: ['智能设施', '一对一护理'],
+                            operationStatus: '1',
+                            businessDays: ['1', '2', '3', '4', '5', '6'],
+                            businessHoursStart: new Date(2000, 0, 1, 7, 30),
+                            businessHoursEnd: new Date(2000, 0, 1, 19, 30),
+                            currentResidents: 85,
+                            totalResidents: 210,
+                            admissionNotice: '需提前一周预约，入住需体检合格',
+                            serviceSummary: '采用智能化管理系统，提供个性化养老服务方案',
+                            promotionImages: [],
+                            environmentImages: [],
+                            rating: 4.5
+                        },
+                        {
+                            id: 3,
+                            name: '颐和养老院',
+                            region: ['440000', '440100', '440106'],
+                            regionText: '广东省 广州市 天河区',
+                            address: '天河区珠江新城',
+                            manager: '王强',
+                            contactPhone: '13600136000',
+                            tags: ['园林式环境', '医疗团队'],
+                            operationStatus: '2',
+                            businessDays: ['1', '2', '3', '4', '5'],
+                            businessHoursStart: new Date(2000, 0, 1, 8, 30),
+                            businessHoursEnd: new Date(2000, 0, 1, 18, 0),
+                            currentResidents: 65,
+                            totalResidents: 180,
+                            admissionNotice: '需家属陪同前来参观并面谈',
+                            serviceSummary: '拥有专业医疗团队，提供24小时医疗看护服务',
+                            promotionImages: [],
+                            environmentImages: [],
+                            rating: 4.2
+                        }
+                    ],
+
+                    // 区域选项
+                    regionOptions: [
+                        {
+                            value: '110000',
+                            label: '北京市',
+                            children: [
+                                {
+                                    value: '110100',
+                                    label: '北京市',
+                                    children: [
+                                        { value: '110101', label: '东城区' },
+                                        { value: '110102', label: '西城区' },
+                                        { value: '110105', label: '朝阳区' },
+                                        { value: '110106', label: '丰台区' },
+                                        { value: '110107', label: '石景山区' },
+                                        { value: '110108', label: '海淀区' }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            value: '310000',
+                            label: '上海市',
+                            children: [
+                                {
+                                    value: '310100',
+                                    label: '上海市',
+                                    children: [
+                                        { value: '310101', label: '黄浦区' },
+                                        { value: '310104', label: '徐汇区' },
+                                        { value: '310105', label: '长宁区' },
+                                        { value: '310106', label: '静安区' },
+                                        { value: '310115', label: '浦东新区' }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            value: '440000',
+                            label: '广东省',
+                            children: [
+                                {
+                                    value: '440100',
+                                    label: '广州市',
+                                    children: [
+                                        { value: '440103', label: '荔湾区' },
+                                        { value: '440104', label: '越秀区' },
+                                        { value: '440105', label: '海珠区' },
+                                        { value: '440106', label: '天河区' }
+                                    ]
+                                },
+                                {
+                                    value: '440300',
+                                    label: '深圳市',
+                                    children: [
+                                        { value: '440303', label: '罗湖区' },
+                                        { value: '440304', label: '福田区' },
+                                        { value: '440305', label: '南山区' }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                };
+            },
+            computed: {
+                // 过滤后的列表数据
+                filteredList() {
+                    const { name, region, operationStatus } = this.searchForm;
+                    return this.institutionList.filter(item => {
+                        // 机构名称筛选
+                        if (name && !item.name.includes(name)) return false;
+
+                        // 区域筛选
+                        if (region && region.length > 0) {
+                            // 根据选择的层级进行匹配
+                            const matchLevel = region.length;
+                            for (let i = 0; i < matchLevel; i++) {
+                                if (item.region[i] !== region[i]) return false;
+                            }
+                        }
+
+                        // 营业状态筛选
+                        if (operationStatus && item.operationStatus !== operationStatus) return false;
+
+                        return true;
+                    });
+                }
+            },
+            methods: {
+                // 菜单切换
+                handleMenu(index) {
+                    switch (index) {
+                        case '1':
+                            window.location.href = 'index.html';
+                            break;
+                        case '2':
+                            window.location.href = 'servicePage.html';
+                            break;
+                        case '3':
+                            window.location.href = 'staffManagement.html';
+                            break;
+                        case '4':
+                            window.location.href = 'elderlyInstitution.html';
+                            break;
+                        case '5':
+                            window.location.href = 'serviceProvider.html';
+                            break;
+                        case '6':
+                            window.location.href = 'orderManagement.html';
+                            break;
+                    }
+                },
+
+                // 搜索处理
+                handleSearch() {
+                    this.currentPage = 1;
+                    this.tableLoading = true;
+                    setTimeout(() => {
+                        this.tableLoading = false;
+                    }, 300);
+                },
+
+                // 重置搜索
+                resetSearch() {
+                    this.searchForm = {
+                        name: '',
+                        region: [],
+                        operationStatus: ''
+                    };
+                    this.handleSearch();
+                },
+
+                // 分页处理
+                handleSizeChange(val) {
+                    this.pageSize = val;
+                },
+                handleCurrentChange(val) {
+                    this.currentPage = val;
+                },
+
+                // 打开弹窗
+                openDialog(type, row) {
+                    this.dialogVisible = true;
+                    if (type === 'add') {
+                        this.dialogTitle = '新增养老机构';
+                        this.form = {
+                            id: null,
+                            name: '',
+                            region: [],
+                            address: '',
+                            manager: '',
+                            contactPhone: '',
+                            tags: [],
+                            operationStatus: '1',
+                            businessDays: ['1', '2', '3', '4', '5'],
+                            businessHoursStart: new Date(2000, 0, 1, 8, 0),
+                            businessHoursEnd: new Date(2000, 0, 1, 18, 0),
+                            currentResidents: 0,
+                            totalResidents: 0,
+                            admissionNotice: '',
+                            serviceSummary: '',
+                            promotionImages: [],
+                            environmentImages: [],
+                            rating: 0
+                        };
+                    } else {
+                        this.dialogTitle = '编辑养老机构';
+                        this.form = JSON.parse(JSON.stringify(row));
+                    }
+                },
+
+                // 查看详情
+                viewDetail(row) {
+                    this.$message.info('查看详情功能开发中...');
+                },
+
+                // 删除机构
+                handleDelete(row) {
+                    this.$confirm('确认删除该机构吗？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        const index = this.institutionList.findIndex(item => item.id === row.id);
+                        if (index !== -1) {
+                            this.institutionList.splice(index, 1);
+                            this.$message.success('删除成功');
+                        }
+                    }).catch(() => { });
+                },
+
+                // 提交表单
+                submitForm() {
+                    this.$refs.institutionForm.validate(valid => {
+                        if (valid) {
+                            this.tableLoading = true;
+                            setTimeout(() => {
+                                if (this.form.id) {
+                                    // 编辑
+                                    const index = this.institutionList.findIndex(item => item.id === this.form.id);
+                                    if (index !== -1) {
+                                        // 更新区域文本
+                                        this.form.regionText = this.getRegionText(this.form.region);
+                                        this.institutionList.splice(index, 1, this.form);
+                                    }
+                                } else {
+                                    // 新增
+                                    const newId = this.institutionList.length > 0 ? Math.max(...this.institutionList.map(item => item.id)) + 1 : 1;
+                                    this.form.id = newId;
+                                    // 更新区域文本
+                                    this.form.regionText = this.getRegionText(this.form.region);
+                                    this.institutionList.push(this.form);
+                                }
+                                this.tableLoading = false;
+                                this.dialogVisible = false;
+                                this.$message.success('保存成功');
+                            }, 500);
+                        }
+                    });
+                },
+
+                // 获取区域文本
+                getRegionText(region) {
+                    if (!region || region.length === 0) return '';
+
+                    let result = [];
+                    let options = this.regionOptions;
+
+                    for (let i = 0; i < region.length; i++) {
+                        const value = region[i];
+                        const option = options.find(opt => opt.value === value);
+
+                        if (option) {
+                            result.push(option.label);
+                            options = option.children || [];
+                        }
+                    }
+
+                    return result.join(' ');
+                },
+
+                // 获取状态文本
+                getStatusText(status) {
+                    switch (status) {
+                        case '1': return '正常营业';
+                        case '2': return '暂停营业';
+                        case '3': return '即将开业';
+                        case '0': return '已关闭';
+                        default: return '未知';
+                    }
+                },
+
+                // 获取状态类型
+                getStatusType(status) {
+                    switch (status) {
+                        case '1': return 'success';
+                        case '2': return 'warning';
+                        case '3': return 'info';
+                        case '0': return 'danger';
+                        default: return 'info';
+                    }
+                },
+
+                // 标签相关方法
+                showInputTag() {
+                    this.inputTagVisible = true;
+                    this.$nextTick(_ => {
+                        this.$refs.saveTagInput.$refs.input.focus();
+                    });
+                },
+                handleInputConfirm() {
+                    const inputValue = this.inputTagValue;
+                    if (inputValue && !this.form.tags.includes(inputValue)) {
+                        this.form.tags.push(inputValue);
+                    }
+                    this.inputTagVisible = false;
+                    this.inputTagValue = '';
+                },
+                handleRemoveTag(tag) {
+                    this.form.tags.splice(this.form.tags.indexOf(tag), 1);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

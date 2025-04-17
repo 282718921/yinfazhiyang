@@ -458,30 +458,119 @@
       el: '#app',
       data() {
         return {
+          /**
+           * 当前激活的页面，用于控制显示内容
+           * @type {string}
+           */
           activePage: 'home',
+          
+          /**
+           * 当前日期，格式化为中文显示（年、月、日、星期）
+           * @type {string}
+           */
           currentDate: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }),
+          
+          /**
+           * 统计数据对象，包含各类数据的统计信息
+           * @type {Object}
+           * @property {number} serviceCount - 服务总数
+           * @property {number} staffCount - 服务人员数量
+           * @property {number} institutionCount - 养老机构数量
+           * @property {number} providerCount - 服务商数量
+           * @property {number} orderCount - 订单总数
+           * @property {string} monthlyRevenue - 本月营收（元）
+           */
           statistics: {
-            serviceCount: 28,
-            staffCount: 45,
-            institutionCount: 12,
-            providerCount: 8,
-            orderCount: 156,
-            monthlyRevenue: '28,560'
+            serviceCount: 0,
+            staffCount: 0,
+            institutionCount: 0,
+            providerCount: 0,
+            orderCount: 0,
+            monthlyRevenue: '0'
           },
-          recentOrders: [
-            { orderNo: 'ORD20230001', customerName: '张三', serviceName: '上门四菜一汤', amount: 120, orderTime: '2023-05-15 14:30:25', status: 'completed' },
-            { orderNo: 'ORD20230002', customerName: '李四', serviceName: '居家康复护理', amount: 200, orderTime: '2023-05-15 16:45:12', status: 'processing' },
-            { orderNo: 'ORD20230003', customerName: '王五', serviceName: '上门打扫卫生', amount: 80, orderTime: '2023-05-16 09:20:45', status: 'pending_service' },
-            { orderNo: 'ORD20230004', customerName: '赵六', serviceName: '陪同就医', amount: 150, orderTime: '2023-05-16 13:10:30', status: 'pending_payment' },
-            { orderNo: 'ORD20230005', customerName: '钱七', serviceName: '健康管理', amount: 300, orderTime: '2023-05-17 10:05:18', status: 'cancelled' }
-          ]
+          
+          /**
+           * 最近订单列表数据
+           * @type {Array<Object>}
+           */
+          recentOrders: []
         };
       },
+      
+      /**
+       * 生命周期钩子 - 组件挂载完成后
+       * 初始化图表组件并获取数据
+       */
       mounted() {
+        this.getStatisticsData();
+        this.getRecentOrders();
         this.initOrderTrendChart();
         this.initServiceTypeChart();
       },
       methods: {
+        /**
+         * 获取统计数据
+         * 模拟API调用获取首页统计数据
+         */
+        getStatisticsData() {
+          // 模拟API请求
+          setTimeout(() => {
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '操作成功',
+              data: {
+                serviceCount: 28,      // 服务总数
+                staffCount: 45,        // 服务人员数量
+                institutionCount: 12,   // 养老机构数量
+                providerCount: 8,       // 服务商数量
+                orderCount: 156,        // 订单总数
+                monthlyRevenue: '28,560' // 本月营收（元）
+              }
+            };
+            
+            // 更新数据
+            if (res.code === 200) {
+              this.statistics = res.data;
+            } else {
+              this.$message.error(res.message || '获取统计数据失败');
+            }
+          }, 300);
+        },
+        
+        /**
+         * 获取最近订单数据
+         * 模拟API调用获取最近订单列表
+         */
+        getRecentOrders() {
+          // 模拟API请求
+          setTimeout(() => {
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '操作成功',
+              data: [
+                { orderNo: 'ORD20230001', customerName: '张三', serviceName: '上门四菜一汤', amount: 120, orderTime: '2023-05-15 14:30:25', status: 'completed' },
+                { orderNo: 'ORD20230002', customerName: '李四', serviceName: '居家康复护理', amount: 200, orderTime: '2023-05-15 16:45:12', status: 'processing' },
+                { orderNo: 'ORD20230003', customerName: '王五', serviceName: '上门打扫卫生', amount: 80, orderTime: '2023-05-16 09:20:45', status: 'pending_service' },
+                { orderNo: 'ORD20230004', customerName: '赵六', serviceName: '陪同就医', amount: 150, orderTime: '2023-05-16 13:10:30', status: 'pending_payment' },
+                { orderNo: 'ORD20230005', customerName: '钱七', serviceName: '健康管理', amount: 300, orderTime: '2023-05-17 10:05:18', status: 'cancelled' }
+              ]
+            };
+            
+            // 更新数据
+            if (res.code === 200) {
+              this.recentOrders = res.data;
+            } else {
+              this.$message.error(res.message || '获取最近订单失败');
+            }
+          }, 500);
+        },
+        
+        /**
+         * 处理菜单选择事件
+         * @param {string} index - 菜单项的索引值
+         */
         handleMenu(index) {
           switch (index) {
             case '1':
@@ -511,6 +600,10 @@
               break;
           }
         },
+        /**
+         * 导航到指定页面
+         * @param {string} page - 目标页面标识
+         */
         navigateTo(page) {
           switch (page) {
             case 'service':
@@ -530,23 +623,45 @@
               break;
           }
         },
+        /**
+         * 刷新仪表盘数据
+         * 模拟API调用刷新统计数据并更新图表
+         */
         refreshDashboard() {
-          this.$message({
-            message: '数据已刷新',
-            type: 'success'
-          });
-          // 模拟数据刷新
-          this.statistics = {
-            serviceCount: Math.floor(Math.random() * 10) + 25,
-            staffCount: Math.floor(Math.random() * 10) + 40,
-            institutionCount: Math.floor(Math.random() * 5) + 10,
-            providerCount: Math.floor(Math.random() * 3) + 7,
-            orderCount: Math.floor(Math.random() * 20) + 150,
-            monthlyRevenue: (Math.floor(Math.random() * 5000) + 25000).toString()
-          };
-          this.initOrderTrendChart();
-          this.initServiceTypeChart();
+          // 模拟API请求
+          setTimeout(() => {
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '数据已刷新',
+              data: {
+                serviceCount: Math.floor(Math.random() * 10) + 25,      // 服务总数
+                staffCount: Math.floor(Math.random() * 10) + 40,        // 服务人员数量
+                institutionCount: Math.floor(Math.random() * 5) + 10,   // 养老机构数量
+                providerCount: Math.floor(Math.random() * 3) + 7,       // 服务商数量
+                orderCount: Math.floor(Math.random() * 20) + 150,       // 订单总数
+                monthlyRevenue: (Math.floor(Math.random() * 5000) + 25000).toString() // 本月营收
+              }
+            };
+            
+            if (res.code === 200) {
+              this.statistics = res.data;
+              this.$message({
+                message: res.message,
+                type: 'success'
+              });
+              this.initOrderTrendChart();
+              this.initServiceTypeChart();
+            } else {
+              this.$message.error(res.message || '刷新数据失败');
+            }
+          }, 500);
         },
+        /**
+         * 获取订单状态对应的标签类型
+         * @param {string} status - 订单状态标识
+         * @return {string} 对应的Element UI标签类型
+         */
         getStatusType(status) {
           switch (status) {
             case 'pending_payment':
@@ -563,6 +678,11 @@
               return 'info';
           }
         },
+        /**
+         * 获取订单状态对应的中文文本
+         * @param {string} status - 订单状态标识
+         * @return {string} 对应的中文状态文本
+         */
         getStatusText(status) {
           switch (status) {
             case 'pending_payment':
@@ -579,6 +699,10 @@
               return '未知状态';
           }
         },
+        /**
+         * 查看订单详情
+         * @param {Object} order - 订单对象
+         */
         viewOrderDetail(order) {
           this.$message({
             message: `查看订单详情：${order.orderNo}`,
@@ -587,6 +711,10 @@
           // 跳转到订单管理页面并传递订单ID
           window.location.href = `orderManagement.html?orderId=${order.orderNo}`;
         },
+        /**
+         * 初始化订单趋势图表
+         * 使用ECharts创建订单数量和营收金额的趋势图表
+         */
         initOrderTrendChart() {
           const chartDom = document.getElementById('orderTrendChart');
           if (!chartDom) return;
@@ -650,6 +778,10 @@
             myChart.resize();
           });
         },
+        /**
+         * 初始化服务类型分布图表
+         * 使用ECharts创建展示不同服务类型分布的饼图
+         */
         initServiceTypeChart() {
           const chartDom = document.getElementById('serviceTypeChart');
           if (!chartDom) return;

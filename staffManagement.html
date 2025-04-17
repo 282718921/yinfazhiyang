@@ -592,38 +592,90 @@
       el: '#app',
       data() {
         return {
+          /**
+           * 当前激活的页面，用于控制显示内容
+           * @type {string}
+           */
           activePage: 'staff',
+          
+          /**
+           * 当前激活的标签页
+           * @type {string}
+           */
           activeTab: 'basic',
+          
+          /**
+           * 当前页码
+           * @type {number}
+           */
           currentPage: 1,
+          
+          /**
+           * 每页显示的记录数
+           * @type {number}
+           */
           pageSize: 10,
+          
+          /**
+           * 搜索表单数据
+           * @type {Object}
+           * @property {string} name - 服务人员姓名
+           * @property {Array} serviceTypes - 服务类型数组
+           * @property {string} status - 服务人员状态
+           */
           searchForm: {
             name: '',
             serviceTypes: [],
             status: ''
           },
+          
+          /**
+           * 表格加载状态
+           * @type {boolean}
+           */
           tableLoading: false,
+          
+          /**
+           * 弹窗显示状态
+           * @type {boolean}
+           */
           dialogVisible: false,
+          
+          /**
+           * 弹窗标题
+           * @type {string}
+           */
           dialogTitle: '',
+          
+          /**
+           * 表单数据对象
+           * @type {Object}
+           */
           form: {
-            id: null,
-            name: '',
-            birthDate: '',
-            age: 30,
-            phone: '',
-            education: '',
-            workYears: 0,
-            region: [],
-            address: '',
-            company: '',
-            orderCount: 0,
-            status: '1',
-            serviceType: '',
-            serviceTypes: [],
-            idCardImages: [],
-            certificates: [],
-            boundServiceIds: [],
-            experiences: []
+            id: null,            // 服务人员ID
+            name: '',            // 姓名
+            birthDate: '',       // 出生日期
+            age: 30,             // 年龄
+            phone: '',           // 联系方式
+            education: '',       // 文化水平
+            workYears: 0,        // 从业年限
+            region: [],          // 所在地区
+            address: '',         // 详细地址
+            company: '',         // 所属公司
+            orderCount: 0,       // 服务单量
+            status: '1',         // 状态：1-可分配任务，0-不可分配任务
+            serviceType: '',     // 单一服务类型（兼容旧数据）
+            serviceTypes: [],    // 服务类型数组
+            idCardImages: [],    // 证件照片
+            certificates: [],    // 相关证书
+            boundServiceIds: [], // 绑定的服务ID
+            experiences: []      // 工作经历
           },
+          
+          /**
+           * 表单验证规则
+           * @type {Object}
+           */
           formRules: {
             name: [
               { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -643,6 +695,13 @@
               { required: true, message: '请输入详细地址', trigger: 'blur' }
             ]
           },
+          
+          /**
+           * 服务类型选项
+           * @type {Array<Object>}
+           * @property {string} dictValue - 服务类型值
+           * @property {string} dictLabel - 服务类型标签
+           */
           typeOptions: [
             { dictValue: 'bjhs', dictLabel: '保洁护理' },
             { dictValue: 'jdqx', dictLabel: '家电清修' },
@@ -653,6 +712,11 @@
             { dictValue: 'smwx', dictLabel: '上门维修' },
             { dictValue: 'yyxz', dictLabel: '预约巡诊' }
           ],
+          
+          /**
+           * 地区选项
+           * @type {Array<Object>}
+           */
           regionOptions: [
             {
               value: 'beijing',
@@ -671,79 +735,36 @@
               ]
             }
           ],
-          serviceList: [
-            { id: 1, name: '上门擦玻璃', type: 'bjhs' },
-            { id: 2, name: '修马桶', type: 'jdqx' },
-            { id: 3, name: '上门做饭四菜一汤', type: 'smzf' },
-            { id: 4, name: '空调清洗', type: 'jdqx' },
-            { id: 5, name: '修漏水', type: 'jdqx' },
-            { id: 6, name: '墙皮掉落修复', type: 'smwx' }
-          ],
-          staffList: [
-            { 
-              id: 1, 
-              name: '张三', 
-              age: 35, 
-              serviceType: 'bjhs', 
-              serviceTypes: ['bjhs', 'jdqx'], 
-              phone: '13900139000', 
-              certificates: [{name: '保洁证书'}, {name: '健康证'}], 
-              workYears: 5, 
-              boundServices: [{id: 1, name: '上门擦玻璃'}, {id: 2, name: '空调清洗'}],
-              address: '北京市朝阳区建国路88号', 
-              company: '北京家政服务有限公司',
-              orderCount: 120,
-              status: '1'
-            },
-            { 
-              id: 2, 
-              name: '李四', 
-              age: 28, 
-              serviceType: 'jdqx', 
-              serviceTypes: ['jdqx'], 
-              phone: '13800138000', 
-              certificates: [{name: '电工证'}], 
-              workYears: 3, 
-              boundServices: [{id: 2, name: '修马桶'}, {id: 3, name: '修漏水'}],
-              address: '北京市海淀区中关村大街1号', 
-              company: '北京清洁服务有限公司',
-              orderCount: 85,
-              status: '1'
-            },
-            { 
-              id: 3, 
-              name: '王五', 
-              age: 42, 
-              serviceType: 'smzf', 
-              serviceTypes: ['smzf'], 
-              phone: '13700137001', 
-              certificates: [{name: '厨师证'}, {name: '健康证'}], 
-              workYears: 10, 
-              boundServices: [{id: 3, name: '上门做饭四菜一汤'}],
-              address: '北京市海淀区中关村南大街5号', 
-              company: '北京家政服务有限公司',
-              orderCount: 156,
-              status: '1'
-            },
-            { 
-              id: 4, 
-              name: '赵六', 
-              age: 32, 
-              serviceType: 'xlgh', 
-              serviceTypes: ['xlgh'], 
-              phone: '13600136001', 
-              certificates: [{name: '心理咨询师证书'}], 
-              workYears: 4, 
-              boundServices: [{id: 6, name: '墙皮掉落修复'}],
-              address: '上海市黄浦区南京东路100号', 
-              company: '上海心理健康服务中心',
-              orderCount: 68,
-              status: '0'
-            }
-          ]
+          
+          /**
+           * 服务列表数据
+           * @type {Array<Object>}
+           */
+          serviceList: [],
+          
+          /**
+           * 服务人员列表数据
+           * @type {Array<Object>}
+           */
+          staffList: []
         };
       },
+      
+      /**
+       * 生命周期钩子 - 组件挂载完成后
+       * 获取初始数据
+       */
+      mounted() {
+        // 获取服务列表数据
+        this.getServiceList();
+        // 获取服务人员列表数据
+        this.getStaffList();
+      },
       computed: {
+        /**
+         * 根据搜索条件过滤后的服务人员列表
+         * @returns {Array<Object>} 过滤后的服务人员数组
+         */
         filteredStaffList() {
           return this.staffList.filter(item => {
             // 检查名称匹配
@@ -771,6 +792,126 @@
         }
       },
       methods: {
+        /**
+         * 获取服务列表数据
+         * 模拟API调用获取服务列表
+         */
+        getServiceList() {
+          // 模拟API请求
+          setTimeout(() => {
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '操作成功',
+              data: [
+                { id: 1, name: '上门擦玻璃', type: 'bjhs' },
+                { id: 2, name: '修马桶', type: 'jdqx' },
+                { id: 3, name: '上门做饭四菜一汤', type: 'smzf' },
+                { id: 4, name: '空调清洗', type: 'jdqx' },
+                { id: 5, name: '修漏水', type: 'jdqx' },
+                { id: 6, name: '墙皮掉落修复', type: 'smwx' }
+              ]
+            };
+            
+            // 更新数据
+            if (res.code === 200) {
+              this.serviceList = res.data;
+            } else {
+              this.$message.error(res.message || '获取服务列表失败');
+            }
+          }, 300);
+        },
+        
+        /**
+         * 获取服务人员列表数据
+         * 模拟API调用获取服务人员列表
+         */
+        getStaffList() {
+          this.tableLoading = true;
+          // 模拟API请求
+          setTimeout(() => {
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '操作成功',
+              data: [
+                { 
+                  id: 1, 
+                  name: '张三', 
+                  age: 35, 
+                  serviceType: 'bjhs', 
+                  serviceTypes: ['bjhs', 'jdqx'], 
+                  phone: '13900139000', 
+                  certificates: [{name: '保洁证书'}, {name: '健康证'}], 
+                  workYears: 5, 
+                  boundServices: [{id: 1, name: '上门擦玻璃'}, {id: 2, name: '空调清洗'}],
+                  address: '北京市朝阳区建国路88号', 
+                  company: '北京家政服务有限公司',
+                  orderCount: 120,
+                  status: '1'
+                },
+                { 
+                  id: 2, 
+                  name: '李四', 
+                  age: 28, 
+                  serviceType: 'jdqx', 
+                  serviceTypes: ['jdqx'], 
+                  phone: '13800138000', 
+                  certificates: [{name: '电工证'}], 
+                  workYears: 3, 
+                  boundServices: [{id: 2, name: '修马桶'}, {id: 3, name: '修漏水'}],
+                  address: '北京市海淀区中关村大街1号', 
+                  company: '北京清洁服务有限公司',
+                  orderCount: 85,
+                  status: '1'
+                },
+                { 
+                  id: 3, 
+                  name: '王五', 
+                  age: 42, 
+                  serviceType: 'smzf', 
+                  serviceTypes: ['smzf'], 
+                  phone: '13700137001', 
+                  certificates: [{name: '厨师证'}, {name: '健康证'}], 
+                  workYears: 10, 
+                  boundServices: [{id: 3, name: '上门做饭四菜一汤'}],
+                  address: '北京市海淀区中关村南大街5号', 
+                  company: '北京家政服务有限公司',
+                  orderCount: 156,
+                  status: '1'
+                },
+                { 
+                  id: 4, 
+                  name: '赵六', 
+                  age: 32, 
+                  serviceType: 'xlgh', 
+                  serviceTypes: ['xlgh'], 
+                  phone: '13600136001', 
+                  certificates: [{name: '心理咨询师证书'}], 
+                  workYears: 4, 
+                  boundServices: [{id: 6, name: '墙皮掉落修复'}],
+                  address: '上海市黄浦区南京东路100号', 
+                  company: '上海心理健康服务中心',
+                  orderCount: 68,
+                  status: '0'
+                }
+              ]
+            };
+            
+            // 更新数据
+            if (res.code === 200) {
+              this.staffList = res.data;
+            } else {
+              this.$message.error(res.message || '获取服务人员列表失败');
+            }
+            this.tableLoading = false;
+          }, 500);
+        },
+        
+        /**
+         * 处理菜单选择事件
+         * @param {string} index - 菜单项索引
+         */
         handleMenu(index) {
           switch (index) {
             case '1':
@@ -793,12 +934,28 @@
               break;
           }
         },
+        /**
+         * 处理搜索按钮点击事件
+         * 搜索功能由计算属性filteredStaffList实现
+         */
         handleSearch() {
           // 搜索功能由计算属性实现
+          this.currentPage = 1;
         },
+        
+        /**
+         * 重置搜索表单
+         * 清空搜索条件并重置页码
+         */
         resetSearch() {
           this.searchForm = { name: '', serviceTypes: [], status: '' };
+          this.currentPage = 1;
         },
+        /**
+         * 打开新增/编辑弹窗
+         * @param {string} type - 操作类型：'add'新增，'edit'编辑
+         * @param {Object} row - 当前行数据对象（编辑时传入）
+         */
         openDialog(type, row) {
           this.dialogTitle = type === 'add' ? '新增服务人员' : '编辑服务人员';
           this.activeTab = 'basic';
@@ -855,12 +1012,16 @@
             }
           });
         },
+        /**
+         * 提交表单数据
+         * 验证表单并保存数据
+         */
         submitForm() {
           this.$refs.staffForm.validate(valid => {
             if (valid) {
               this.tableLoading = true;
               
-              // 模拟API请求延迟
+              // 模拟API请求
               setTimeout(() => {
                 // 处理绑定服务
                 const boundServices = [];
@@ -882,34 +1043,49 @@
                   serviceTypes = [this.form.serviceType];
                 }
                 
+                // 构建提交的数据
                 const staffData = {
                   ...this.form,
                   boundServices: boundServices,
                   serviceTypes: serviceTypes
                 };
                 
-                if (this.form.id) {
-                  // 编辑现有服务人员
-                  const index = this.staffList.findIndex(item => item.id === this.form.id);
-                  if (index !== -1) {
-                    this.staffList.splice(index, 1, staffData);
-                  }
-                } else {
-                  // 添加新服务人员
-                  const newId = this.staffList.length > 0 ? Math.max(...this.staffList.map(item => item.id)) + 1 : 1;
-                  this.staffList.push({
+                // 模拟接口返回数据
+                const res = {
+                  code: 200,
+                  message: '操作成功',
+                  data: this.form.id ? staffData : {
                     ...staffData,
-                    id: newId
-                  });
-                }
+                    id: this.staffList.length > 0 ? Math.max(...this.staffList.map(item => item.id)) + 1 : 1
+                  }
+                };
                 
-                this.dialogVisible = false;
-                this.$message.success('操作成功');
+                if (res.code === 200) {
+                  if (this.form.id) {
+                    // 编辑现有服务人员
+                    const index = this.staffList.findIndex(item => item.id === this.form.id);
+                    if (index !== -1) {
+                      this.staffList.splice(index, 1, res.data);
+                    }
+                  } else {
+                    // 添加新服务人员
+                    this.staffList.push(res.data);
+                  }
+                  
+                  this.dialogVisible = false;
+                  this.$message.success(res.message);
+                } else {
+                  this.$message.error(res.message || '保存失败');
+                }
                 this.tableLoading = false;
               }, 500);
             }
           });
         },
+        /**
+         * 处理删除服务人员
+         * @param {Object} row - 要删除的服务人员数据
+         */
         handleDelete(row) {
           this.$confirm('确认删除该服务人员?', '提示', {
             confirmButtonText: '确定',
@@ -918,38 +1094,91 @@
           }).then(() => {
             this.tableLoading = true;
             
-            // 模拟API请求延迟
+            // 模拟API请求
             setTimeout(() => {
-              this.staffList = this.staffList.filter(item => item.id !== row.id);
-              this.$message.success('删除成功');
+              // 模拟接口返回数据
+              const res = {
+                code: 200,
+                message: '删除成功',
+                data: null
+              };
+              
+              if (res.code === 200) {
+                this.staffList = this.staffList.filter(item => item.id !== row.id);
+                this.$message.success(res.message);
+              } else {
+                this.$message.error(res.message || '删除失败');
+              }
               this.tableLoading = false;
             }, 500);
           }).catch(() => {});
         },
+        /**
+         * 处理每页显示数量变化
+         * @param {number} val - 新的每页显示数量
+         */
         handleSizeChange(val) {
           this.pageSize = val;
         },
+        
+        /**
+         * 处理页码变化
+         * @param {number} val - 新的页码
+         */
         handleCurrentChange(val) {
           this.currentPage = val;
         },
+        
+        /**
+         * 处理服务人员状态变更
+         * @param {Object} row - 当前行数据对象
+         * @param {string} val - 新状态值
+         */
         handleStatusChange(row, val) {
           this.tableLoading = true;
           
-          // 模拟API请求延迟
+          // 模拟API请求
           setTimeout(() => {
-            row.status = val;
-            this.$message.success(`服务人员「${row.name}」状态已${val === '1' ? '设为可分配任务' : '设为不可分配任务'}`);
+            // 模拟接口返回数据
+            const res = {
+              code: 200,
+              message: '操作成功',
+              data: null
+            };
+            
+            if (res.code === 200) {
+              row.status = val;
+              this.$message.success(`服务人员「${row.name}」状态已${val === '1' ? '设为可分配任务' : '设为不可分配任务'}`);
+            } else {
+              this.$message.error(res.message || '状态更新失败');
+            }
             this.tableLoading = false;
           }, 300);
         },
+        /**
+         * 获取服务类型标签文本
+         * @param {string} typeValue - 服务类型值
+         * @returns {string} 服务类型标签文本
+         */
         getTypeLabel(typeValue) {
           const type = this.typeOptions.find(item => item.dictValue === typeValue);
           return type ? type.dictLabel : typeValue;
         },
+        
+        /**
+         * 获取多个服务类型的标签文本
+         * @param {Array<string>} types - 服务类型值数组
+         * @returns {string} 服务类型标签文本，以逗号分隔
+         */
         getServiceTypeLabels(types) {
           if (!types || !Array.isArray(types)) return '';
           return types.map(type => this.getTypeLabel(type)).join(', ');
         },
+        
+        /**
+         * 添加证书
+         * 向证书列表添加一个空证书对象
+         */
         addCertificate() {
           if (!this.form.certificates) {
             this.form.certificates = [];
@@ -960,9 +1189,19 @@
             imageUrl: ''
           });
         },
+        /**
+         * 移除证书
+         * @param {number} index - 要移除的证书索引
+         */
         removeCertificate(index) {
           this.form.certificates.splice(index, 1);
         },
+        
+        /**
+         * 处理证书图片上传
+         * @param {Object} file - 上传的文件对象
+         * @param {number} index - 证书索引
+         */
         handleCertificateUpload(file, index) {
           // 模拟上传，实际项目中应该调用上传API
           const reader = new FileReader();
